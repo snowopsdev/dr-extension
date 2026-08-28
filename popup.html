@@ -17,6 +17,37 @@
         <p class="status">Loading…</p>
       </section>
 
+      <section id="settings" class="panel settings" hidden>
+        <p class="settings-lede">
+          Paste your free Ahrefs APIv3 key. Stored only in this browser.
+        </p>
+        <form id="settings-form">
+          <label for="api-key">Ahrefs API key</label>
+          <input
+            id="api-key"
+            name="api-key"
+            type="password"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Paste your free Bearer token"
+          />
+          <p class="hint">
+            Create a key in
+            <a
+              href="https://app.ahrefs.com/account/api"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Ahrefs → Account → API keys</a
+            >.
+          </p>
+          <div class="settings-actions">
+            <button type="submit" class="copy-btn">Save key</button>
+            <button type="button" class="linkish" id="clear-key">Clear</button>
+          </div>
+          <p id="settings-status" class="settings-status" role="status"></p>
+        </form>
+      </section>
+
       <section id="trail" class="trail" hidden>
         <div class="trail-head">
           <p class="trail-title">Recent</p>
@@ -28,13 +59,13 @@
       <footer class="footer">
         <p class="attribution">
           <a
-            href="https://ahrefs.com/"
+            href="http://ahrefs.com/legal/domain-rating-license"
             target="_blank"
             rel="noopener noreferrer"
             >Domain Rating by Ahrefs</a
           >
         </p>
-        <button type="button" class="linkish" id="open-options">
+        <button type="button" class="linkish" id="options-toggle">
           Options
         </button>
       </footer>

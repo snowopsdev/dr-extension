@@ -14,22 +14,22 @@ See Domain Rating for the site you are viewing. Shows the score on the toolbar a
 
 **Detailed Description** [REQUIRED]
 
-See the Domain Rating for any website you visit. The score appears on the toolbar icon, and a quick popup shows the full rating details.
+See the Domain Rating for any website you visit. The score appears on the toolbar icon, and a quick popup shows the rating details.
 
 FEATURES
 • Toolbar badge shows Domain Rating for the current site
-• Popup shows the rating and license link for that domain
+• Popup shows Domain Rating with one-click copy
 • Local DR trail remembers sites you looked up, with score change since last visit
-• One-click copy of domain and Domain Rating for notes or spreadsheets
 • Recent list in the popup, with Clear to remove the local trail
-• Works after you add your own free Ahrefs account key in Options
+• API key setup stays inside the popup Options screen
+• Works after you add your own free Ahrefs account key
 • Your key stays on this browser only and is used only to look up ratings
 
 HOW TO USE
-1. Install the extension and open Options
-2. Create a free Ahrefs API key in your Ahrefs account, then paste it into Options and save
+1. Install the extension and click the toolbar icon
+2. Open Options inside the popup, paste a free Ahrefs API key from your Ahrefs account, then save
 3. Visit any http or https website
-4. Read the Domain Rating on the toolbar badge, or click the icon for details, delta, copy, and recent trail
+4. Read the Domain Rating on the toolbar badge, or open the popup for details, delta, copy, and recent trail
 
 PRIVACY
 This extension does not run ads or analytics. It reads the hostname of the site you are viewing so it can look up Domain Rating, stores the API key you provide on your browser, and may keep a local Domain Rating trail (hostnames and ratings) for the recent list and delta. Lookups are sent only to Ahrefs. Clear removes the trail. See the privacy policy linked on this listing.
@@ -40,13 +40,13 @@ PERMISSIONS
 • Access to api.ahrefs.com — needed to look up Domain Rating
 
 ATTRIBUTION
-Domain Rating by Ahrefs (https://ahrefs.com/). Use is subject to the Domain Rating License.
+Domain Rating by Ahrefs (http://ahrefs.com/legal/domain-rating-license). Use is subject to the Domain Rating License.
 
 SUPPORT
 Questions or issues: https://github.com/snowopsdev/dr-extension/issues
 Contact: aj@snowops.dev
 
-Version 1.2.0 — DR trail with score deltas, one-click copy, Graphite Amber UI, toolbar badges.
+Version 1.2.1 — In-popup Options, cleaner rating UI, DR trail with deltas and copy.
 
 **Category** [REQUIRED]
 
@@ -76,9 +76,9 @@ English
 
 ### Screenshot Notes
 
-1. Success popup on example.com with large Domain Rating, delta/copy, and recent trail (Graphite Amber UI).
-2. Options page where the user pastes a free Ahrefs key (local storage only).
-3. Setup-required popup before a key is saved.
+1. Success popup with Domain Rating, First look / delta, Copy, and Recent trail.
+2. In-popup Options with API key field (local storage only).
+3. Setup-required state with Add API key CTA.
 
 
 ## Permissions Justification
@@ -122,8 +122,6 @@ English
 
 https://gist.github.com/snowopsdev/8ce34b2d81c64daa4bb0d1f331650297
 
-(Optional later: GitHub Pages at `https://snowopsdev.github.io/dr-extension/privacy.html` from `store/privacy.html`.)
-
 Source files:
 
 - `store/privacy.html` — hostable page
@@ -159,8 +157,9 @@ https://github.com/snowopsdev/dr-extension
 
 | Version | Date | Changes | Status |
 |---------|------|---------|--------|
-| 1.2.0 | 2026-08-28 | DR trail (recent lookups), score delta since last visit, one-click copy; Graphite Amber UI; toolbar badges; local API key | Draft |
-| 1.1.0 | 2026-08-28 | First store-ready package draft (superseded before submit by 1.2.0) | Draft |
+| 1.2.1 | 2026-08-28 | In-popup Options (no chrome://extensions jump); remove license URL clutter; “domain rating” label | Submitted |
+| 1.2.0 | 2026-08-28 | DR trail, score delta, one-click copy; Graphite Amber UI; toolbar badges | Draft |
+| 1.1.0 | 2026-08-28 | First store-ready package draft (superseded before submit) | Draft |
 
 
 ## Review Notes
@@ -168,24 +167,21 @@ https://github.com/snowopsdev/dr-extension
 ### Pre-submit package
 
 - Zip: `dist/domain-rating-lookup.zip` (rebuild with `npm run package`)
-- Manifest version: `1.2.0`
-- Reload checklist: Options key save → visit https site → badge shows rating → popup shows rating + license + delta/copy → recent trail appears → Clear removes trail
+- Manifest version: `1.2.1`
+- Reload checklist: popup Options → save key → visit https site → badge shows rating → popup shows rating + delta/copy + recent trail → Clear removes trail
 
 ### Known Issues / Limitations
 
 - Requires a free Ahrefs account API key; there is no built-in shared key.
 - Badge and popup only work on http(s) pages (not `chrome://` or the Web Store).
 - Extension name is “Domain Rating Lookup”; Ahrefs is credited as the Domain Rating source per their license. Reviewers may ask about trademark use of “Ahrefs” / “Domain Rating” in the description — keep attribution clear and do not imply official Ahrefs authorship.
-- In-memory badge cache was moved to `chrome.storage.session` so service worker restarts do not rely on process memory alone.
+- `options.html` remains for Chrome’s manage-extension Options entry; primary UX is in-popup Options.
 
 ### Human actions still required
 
-1. Sign in to the Chrome Web Store Developer Dashboard.
-2. Create a new item → upload `dist/domain-rating-lookup.zip`.
-3. Paste listing fields from this file; upload `icons/icon128.png`, screenshots under `store/screenshots/`, and `store/promo/small-promo-440x280.png`.
-4. Privacy policy URL: https://gist.github.com/snowopsdev/8ce34b2d81c64daa4bb0d1f331650297
-5. Fill privacy disclosures to match the table above.
-6. Submit for review.
+1. Wait for Chrome Web Store review (often a few days; email goes to aj@snowops.dev).
+2. If rejected, paste the rejection notes here and we can triage fixes.
+3. After publish, share the store URL and mark this version **Published**.
 
 ### Rejection History
 

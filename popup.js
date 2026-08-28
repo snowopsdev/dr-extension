@@ -1,6 +1,6 @@
 import { fetchDomainRating } from "./lib/api.js";
 import { errorMessage, hostnameFromUrl } from "./lib/domain.js";
-import { loadApiKey } from "./lib/storage.js";
+import { clearApiKey, loadApiKey, saveApiKey } from "./lib/storage.js";
 import {
   TRAIL_UI_LIMIT,
   clearTrail,
@@ -15,18 +15,47 @@ import {
 
 const domainEl = document.getElementById("domain");
 const panelEl = document.getElementById("panel");
+const settingsEl = document.getElementById("settings");
 const trailSection = document.getElementById("trail");
 const trailList = document.getElementById("trail-list");
-const openOptionsBtn = document.getElementById("open-options");
+const optionsToggle = document.getElementById("options-toggle");
 const clearTrailBtn = document.getElementById("clear-trail");
+const settingsForm = document.getElementById("settings-form");
+const apiKeyInput = document.getElementById("api-key");
+const clearKeyBtn = document.getElementById("clear-key");
+const settingsStatus = document.getElementById("settings-status");
 
-openOptionsBtn.addEventListener("click", () => {
-  chrome.runtime.openOptionsPage();
+/** @type {'main' | 'settings'} */
+let view = "main";
+/** @type {boolean} */
+let lookupRunning = false;
+
+optionsToggle.addEventListener("click", async () => {
+  if (view === "settings") {
+    await showMain();
+    return;
+  }
+  await showSettings();
 });
 
 clearTrailBtn.addEventListener("click", async () => {
   await clearTrail();
   await renderTrail([]);
+});
+
+clearKeyBtn.addEventListener("click", async () => {
+  await clearApiKey();
+  apiKeyInput.value = "";
+  settingsStatus.textContent = "Cleared.";
+  chrome.runtime.sendMessage({ type: "badge.refresh" });
+});
+
+settingsForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await saveApiKey(apiKeyInput.value);
+  settingsStatus.textContent = "Saved locally.";
+  chrome.runtime.sendMessage({ type: "badge.refresh" });
+  await showMain();
 });
 
 trailList.addEventListener("click", async (event) => {
@@ -38,6 +67,32 @@ trailList.addEventListener("click", async (event) => {
   if (!line) return;
   await copyText(line, button);
 });
+
+/**
+ * @returns {Promise<void>}
+ */
+async function showSettings() {
+  view = "settings";
+  optionsToggle.textContent = "Back";
+  panelEl.hidden = true;
+  trailSection.hidden = true;
+  settingsEl.hidden = false;
+  domainEl.textContent = "Options";
+  apiKeyInput.value = await loadApiKey();
+  settingsStatus.textContent = "";
+  apiKeyInput.focus();
+}
+
+/**
+ * @returns {Promise<void>}
+ */
+async function showMain() {
+  view = "main";
+  optionsToggle.textContent = "Options";
+  settingsEl.hidden = true;
+  panelEl.hidden = false;
+  await runLookup();
+}
 
 /**
  * @param {import('./lib/domain.js').ViewState} state
@@ -53,7 +108,13 @@ function render(state, entry = null) {
           Free key:
           <a href="https://app.ahrefs.com/account/api" target="_blank" rel="noopener noreferrer">Ahrefs API keys</a>
         </p>
+        <div class="ready-actions">
+          <button type="button" class="copy-btn" id="open-settings-cta">Add API key</button>
+        </div>
       `;
+      panelEl.querySelector("#open-settings-cta")?.addEventListener("click", () => {
+        void showSettings();
+      });
       return;
     case "loading":
       domainEl.textContent = state.domain;
@@ -69,17 +130,11 @@ function render(state, entry = null) {
       const copyLine = formatCopyLine(state.domain, state.data.rating);
       const deltaHtml = entry ? renderDeltaHtml(entry) : "";
       panelEl.innerHTML = `
-        <p class="rating-label">domain_rating</p>
+        <p class="rating-label">domain rating</p>
         <p class="rating-value">${escapeHtml(formatTrailRating(state.data.rating))}</p>
         ${deltaHtml}
         <div class="ready-actions">
           <button type="button" class="copy-btn" data-copy-main="${escapeAttr(copyLine)}">Copy</button>
-        </div>
-        <div class="field">
-          <p class="field-label">license</p>
-          <p class="field-value">
-            <a href="${escapeAttr(state.data.licenseUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(state.data.licenseUrl)}</a>
-          </p>
         </div>
       `;
       const copyMain = panelEl.querySelector("[data-copy-main]");
@@ -121,6 +176,10 @@ function renderDeltaHtml(entry) {
  * @param {import('./lib/trail.js').TrailEntry[]} entries
  */
 async function renderTrail(entries) {
+  if (view === "settings") {
+    trailSection.hidden = true;
+    return;
+  }
   const recent = entries.slice(0, TRAIL_UI_LIMIT);
   if (recent.length === 0) {
     trailSection.hidden = true;
@@ -187,55 +246,64 @@ function escapeAttr(value) {
   return escapeHtml(value).replaceAll("'", "&#39;");
 }
 
-async function main() {
-  const trail = await loadTrail();
-  await renderTrail(trail);
+/**
+ * @returns {Promise<void>}
+ */
+async function runLookup() {
+  if (lookupRunning) return;
+  lookupRunning = true;
+  try {
+    const trail = await loadTrail();
+    await renderTrail(trail);
 
-  const key = await loadApiKey();
-  if (!key) {
-    render({ status: "needs_key" });
-    return;
-  }
-
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab) {
-    render({
-      status: "error",
-      domain: null,
-      error: { kind: "no_tab" },
-    });
-    return;
-  }
-
-  const domain = hostnameFromUrl(tab.url);
-  if (!domain) {
-    render({
-      status: "error",
-      domain: null,
-      error: { kind: "unsupported_page" },
-    });
-    return;
-  }
-
-  render({ status: "loading", domain });
-  const result = await fetchDomainRating({ domain, key });
-  if (result.ok) {
-    const nextTrail = await recordObservation(domain, result.data.rating);
-    const entry = nextTrail.find((row) => row.domain === domain) || null;
-    render({ status: "ready", domain, data: result.data }, entry);
-    await renderTrail(nextTrail);
-    if (typeof tab.id === "number") {
-      chrome.runtime.sendMessage({
-        type: "badge.set",
-        tabId: tab.id,
-        domain,
-        rating: result.data.rating,
-        licenseUrl: result.data.licenseUrl,
-      });
+    const key = await loadApiKey();
+    if (!key) {
+      render({ status: "needs_key" });
+      return;
     }
-    return;
+
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab) {
+      render({
+        status: "error",
+        domain: null,
+        error: { kind: "no_tab" },
+      });
+      return;
+    }
+
+    const domain = hostnameFromUrl(tab.url);
+    if (!domain) {
+      render({
+        status: "error",
+        domain: null,
+        error: { kind: "unsupported_page" },
+      });
+      return;
+    }
+
+    render({ status: "loading", domain });
+    const result = await fetchDomainRating({ domain, key });
+    if (result.ok) {
+      const nextTrail = await recordObservation(domain, result.data.rating);
+      const entry = nextTrail.find((row) => row.domain === domain) || null;
+      render({ status: "ready", domain, data: result.data }, entry);
+      await renderTrail(nextTrail);
+      if (typeof tab.id === "number") {
+        chrome.runtime.sendMessage({
+          type: "badge.set",
+          tabId: tab.id,
+          domain,
+          rating: result.data.rating,
+          licenseUrl: result.data.licenseUrl,
+        });
+      }
+      return;
+    }
+    render({ status: "error", domain, error: result.error });
+  } finally {
+    lookupRunning = false;
   }
-  render({ status: "error", domain, error: result.error });
 }
 
-main();
+void runLookup();

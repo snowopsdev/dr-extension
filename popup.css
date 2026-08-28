@@ -265,6 +265,60 @@ body {
   color: var(--muted);
 }
 
+.settings-lede {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.settings label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.settings input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(242, 177, 52, 0.28);
+  border-radius: 8px;
+  font: inherit;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.settings input::placeholder {
+  color: #6b6b6b;
+}
+
+.settings .hint {
+  margin: 8px 0 12px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.settings .hint a {
+  color: var(--accent);
+}
+
+.settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-status {
+  min-height: 1.2em;
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);

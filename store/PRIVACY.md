@@ -10,7 +10,7 @@ Domain Rating Lookup is a Chrome extension that shows Ahrefs Domain Rating for t
 
 1. **Active tab hostname.** The extension reads the URL of the active tab (via `tabs` / `activeTab`) to extract the hostname for Ahrefs lookups and to show Domain Rating on the toolbar badge. It does not read page content.
 2. **Ahrefs API key.** If you paste a free Ahrefs APIv3 key into Options, it is stored only in Chrome local storage on this browser (not synced across devices). The key is sent only to `https://api.ahrefs.com` as an `Authorization: Bearer` header when you request a Domain Rating lookup.
-3. **API response fields.** The extension displays the documented fields returned by Ahrefs for your lookup (`domain_rating` and `license`), including as badge text on the action icon. Responses are not uploaded to any third party other than Ahrefs as part of that request.
+3. **API response fields.** The extension shows Domain Rating from Ahrefs (including as badge text). Attribution appears in the popup footer. Responses are not uploaded to any third party other than Ahrefs as part of that request.
 4. **Local Domain Rating trail.** After a successful lookup, the extension may store the hostname and Domain Rating (plus a previous rating for delta display) in Chrome local storage on this browser only. This powers the recent list and “since last visit” delta in the popup. It is never uploaded or synced by this extension. Use **Clear** in the popup to remove the trail; uninstalling the extension also removes it.
 
 ## Data the extension does not collect
@@ -33,7 +33,7 @@ Lookups are sent to Ahrefs (`api.ahrefs.com`) under Ahrefs’ terms and the Doma
 
 ## Your controls
 
-Open the extension Options page to change or clear your API key. In the popup, use **Clear** to delete the local Domain Rating trail. Removing the extension deletes its locally stored data.
+Open **Options** inside the extension popup to change or clear your API key. In the popup, use **Clear** on the recent list to delete the local Domain Rating trail. Removing the extension deletes its locally stored data.
 
 ## Contact
 

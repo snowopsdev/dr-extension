@@ -159,18 +159,38 @@ READY_JS = f"""
 (() => {{
   const domainEl = document.getElementById('domain');
   const panelEl = document.getElementById('panel');
+  const settingsEl = document.getElementById('settings');
+  const trail = document.getElementById('trail');
+  if (settingsEl) settingsEl.hidden = true;
+  if (panelEl) panelEl.hidden = false;
   if (domainEl) domainEl.textContent = {json.dumps(DOMAIN)};
   if (panelEl) {{
     panelEl.innerHTML = \`
-      <p class="rating-label">domain_rating</p>
+      <p class="rating-label">domain rating</p>
       <p class="rating-value">{RATING}</p>
-      <div class="field">
-        <p class="field-label">license</p>
-        <p class="field-value">
-          <a href="{LICENSE}" target="_blank" rel="noopener noreferrer">{LICENSE}</a>
-        </p>
+      <p class="delta first">First look</p>
+      <div class="ready-actions">
+        <button type="button" class="copy-btn">Copy</button>
       </div>
     \`;
+  }}
+  if (trail) {{
+    trail.hidden = false;
+    const list = document.getElementById('trail-list');
+    if (list) {{
+      list.innerHTML = \`
+        <li class="trail-item">
+          <div class="trail-meta">
+            <span class="trail-domain">{json.dumps(DOMAIN)[1:-1]}</span>
+            <span class="trail-score">{RATING}</span>
+          </div>
+          <div class="trail-row">
+            <span class="trail-note">first look</span>
+            <button type="button" class="linkish">Copy</button>
+          </div>
+        </li>
+      \`;
+    }}
   }}
   return true;
 }})()
@@ -178,13 +198,23 @@ READY_JS = f"""
 
 OPTIONS_JS = """
 (() => {
+  const panelEl = document.getElementById('panel');
+  const settingsEl = document.getElementById('settings');
+  const trail = document.getElementById('trail');
+  const domainEl = document.getElementById('domain');
+  const toggle = document.getElementById('options-toggle');
+  if (panelEl) panelEl.hidden = true;
+  if (trail) trail.hidden = true;
+  if (settingsEl) settingsEl.hidden = false;
+  if (domainEl) domainEl.textContent = 'Options';
+  if (toggle) toggle.textContent = 'Back';
   const input = document.getElementById('api-key');
   if (input) {
     input.value = '••••••••••••••••••••••••••••••••';
     input.type = 'password';
   }
-  const status = document.getElementById('status');
-  if (status) status.textContent = 'Saved locally in this browser.';
+  const status = document.getElementById('settings-status');
+  if (status) status.textContent = 'Saved locally.';
   return true;
 })()
 """
@@ -198,25 +228,33 @@ async def main():
             sys.exit(1)
         eid = loaded["result"]["id"]
         await shot_page(
-            browser_ws, eid, "popup.html", 320, 460, READY_JS,
-            "01-popup-ready-1280x800.png", 320, 460,
+            browser_ws, eid, "popup.html", 320, 520, READY_JS,
+            "01-popup-ready-1280x800.png", 320, 520,
         )
         await shot_page(
-            browser_ws, eid, "options.html", 440, 520, OPTIONS_JS,
-            "02-options-1280x800.png", 440, 520,
+            browser_ws, eid, "popup.html", 320, 480, OPTIONS_JS,
+            "02-options-1280x800.png", 320, 480,
         )
         needs_js = """
 (() => {
   const domainEl = document.getElementById('domain');
   const panelEl = document.getElementById('panel');
+  const settingsEl = document.getElementById('settings');
+  const trail = document.getElementById('trail');
+  if (settingsEl) settingsEl.hidden = true;
+  if (trail) trail.hidden = true;
+  if (panelEl) panelEl.hidden = false;
   if (domainEl) domainEl.textContent = 'Setup required';
   if (panelEl) {
     panelEl.innerHTML = \`
-      <p class="error">Add your free Ahrefs APIv3 key in Options to look up Domain Rating.</p>
+      <p class="error">Add your free Ahrefs API key in Options to look up Domain Rating.</p>
       <p class="status" style="margin-top:10px">
         Free key:
         <a href="https://app.ahrefs.com/account/api" target="_blank" rel="noopener noreferrer">Ahrefs API keys</a>
       </p>
+      <div class="ready-actions">
+        <button type="button" class="copy-btn">Add API key</button>
+      </div>
     \`;
   }
   return true;

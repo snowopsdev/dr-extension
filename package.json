@@ -1,0 +1,11 @@
+{
+  "name": "dr-extension",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node scripts/test-domain.mjs",
+    "smoke": "node scripts/smoke-api.mjs",
+    "prove": "node scripts/prove-extension.mjs",
+    "package": "node scripts/package.mjs"
+  }
+}

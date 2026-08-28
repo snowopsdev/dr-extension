@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Domain Rating Lookup</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="brand">
+        <p class="brand-name">Domain Rating Lookup</p>
+        <p class="brand-domain" id="domain">…</p>
+      </header>
+
+      <section id="panel" class="panel" aria-live="polite">
+        <p class="status">Loading…</p>
+      </section>
+
+      <footer class="footer">
+        <p class="attribution">
+          <a
+            href="https://ahrefs.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Domain Rating by Ahrefs</a
+          >
+        </p>
+        <button type="button" class="linkish" id="open-options">
+          Options
+        </button>
+      </footer>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

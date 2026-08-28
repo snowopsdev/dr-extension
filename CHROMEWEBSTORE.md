@@ -157,7 +157,7 @@ https://github.com/snowopsdev/dr-extension
 
 | Version | Date | Changes | Status |
 |---------|------|---------|--------|
-| 1.2.1 | 2026-08-28 | In-popup Options (no chrome://extensions jump); remove license URL clutter; “domain rating” label | Submitted |
+| 1.2.1 | 2026-08-28 | In-popup Options (no chrome://extensions jump); remove license URL clutter; “domain rating” label | Submitted (CWS) / Released (GitHub `v1.2.1`) |
 | 1.2.0 | 2026-08-28 | DR trail, score delta, one-click copy; Graphite Amber UI; toolbar badges | Draft |
 | 1.1.0 | 2026-08-28 | First store-ready package draft (superseded before submit) | Draft |
 

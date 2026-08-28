@@ -6,9 +6,10 @@ Chrome extension that shows **Ahrefs Domain Rating** for the site in your active
 
 <br clear="all" />
 
-![Domain Rating Lookup promo](store/promo/small-promo-440x280.png)
-
-**v1.2.1** · [GitHub Release](https://github.com/snowopsdev/dr-extension/releases/tag/v1.2.1) · Chrome Web Store: *pending review*
+<div align="center">
+  <img src="store/promo/small-promo-440x280.png" alt="Domain Rating Lookup promo" />
+  <p><strong>v1.2.1</strong> · <a href="https://github.com/snowopsdev/dr-extension/releases/tag/v1.2.1">GitHub Release</a> · Chrome Web Store: <em>pending review</em></p>
+</div>
 
 ---
 

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Domain Rating Lookup Options</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <h1>Domain Rating Lookup</h1>
+      <p class="lede">
+        This extension calls Ahrefs’
+        <code>domain-rating-free</code> endpoint. Requests are free of API units
+        and require a free APIv3 key.
+      </p>
+
+      <form id="form">
+        <label for="api-key">Ahrefs API key</label>
+        <input
+          id="api-key"
+          name="api-key"
+          type="password"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Paste your free Bearer token"
+        />
+        <p class="hint">
+          Create a key in
+          <a
+            href="https://app.ahrefs.com/account/api"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Ahrefs → Account → API keys</a
+          >.
+          Stored only in this browser via Chrome local storage. Never sent
+          anywhere except <code>api.ahrefs.com</code>.
+        </p>
+        <div class="actions">
+          <button type="submit">Save key</button>
+          <button type="button" id="clear" class="secondary">Clear key</button>
+        </div>
+        <p id="status" class="status" role="status"></p>
+      </form>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

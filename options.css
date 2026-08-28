@@ -1,0 +1,115 @@
+:root {
+  --ink: #f4f4f4;
+  --muted: #a8a8a8;
+  --accent: #f2b134;
+  --accent-ink: #1a1a1a;
+  --panel: rgba(255, 255, 255, 0.06);
+  --font-display: "Futura", "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-ui: "Gill Sans", "Trebuchet MS", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  background:
+    radial-gradient(110% 80% at 0% 0%, rgba(242, 177, 52, 0.16) 0%, transparent 55%),
+    linear-gradient(165deg, #1a1a1a 0%, #121212 100%);
+  min-height: 100vh;
+}
+
+.shell {
+  max-width: 420px;
+  padding: 20px;
+}
+
+h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lede {
+  margin: 8px 0 18px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(242, 177, 52, 0.28);
+  border-radius: 8px;
+  font: inherit;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+input::placeholder {
+  color: #6b6b6b;
+}
+
+.hint {
+  margin: 8px 0 14px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.hint a {
+  color: var(--accent);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid rgba(242, 177, 52, 0.45);
+}
+
+.status {
+  min-height: 1.2em;
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+code {
+  font-size: 0.85em;
+  color: #d4d4d4;
+}

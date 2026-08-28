@@ -9,7 +9,7 @@ Chrome extension (Manifest V3) that shows Ahrefs Domain Rating for the site in y
 3. Click **Load unpacked**
 4. Select this repository root (the folder that contains `manifest.json`)
 5. Open **Options**, paste a free Ahrefs APIv3 key from [Ahrefs API keys](https://app.ahrefs.com/account/api)
-6. Visit any https site and click the toolbar icon
+6. Visit any https site — the toolbar badge shows Domain Rating; click the icon for details
 
 ## What it shows
 

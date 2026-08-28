@@ -1,13 +1,13 @@
 :root {
-  --ink: #13202c;
-  --muted: #4a5d6e;
-  --panel: rgba(255, 255, 255, 0.72);
-  --accent: #0b6e6a;
-  --danger: #9b2c2c;
+  --ink: #f4f4f4;
+  --muted: #a8a8a8;
+  --panel: rgba(255, 255, 255, 0.06);
+  --accent: #f2b134;
+  --accent-ink: #1a1a1a;
+  --danger: #ff7b72;
   --radius: 10px;
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
-    Georgia, serif;
-  --font-ui: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-display: "Futura", "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-ui: "Gill Sans", "Trebuchet MS", "Segoe UI", sans-serif;
 }
 
 * {
@@ -21,9 +21,9 @@ body {
   color: var(--ink);
   font-family: var(--font-ui);
   background:
-    radial-gradient(120% 90% at 0% 0%, #d7ecea 0%, transparent 55%),
-    radial-gradient(100% 80% at 100% 100%, #e7eef5 0%, transparent 50%),
-    linear-gradient(160deg, #f3f7f8 0%, #e8eef2 100%);
+    radial-gradient(110% 80% at 0% 0%, rgba(242, 177, 52, 0.18) 0%, transparent 55%),
+    radial-gradient(90% 70% at 100% 100%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+    linear-gradient(165deg, #1a1a1a 0%, #121212 55%, #0d0d0d 100%);
 }
 
 .shell {
@@ -36,8 +36,10 @@ body {
 .brand-name {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.15rem;
-  letter-spacing: -0.02em;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   line-height: 1.2;
 }
 
@@ -50,7 +52,7 @@ body {
 
 .panel {
   background: var(--panel);
-  border: 1px solid rgba(19, 32, 44, 0.08);
+  border: 1px solid rgba(242, 177, 52, 0.18);
   border-radius: var(--radius);
   padding: 16px;
   backdrop-filter: blur(8px);
@@ -66,7 +68,7 @@ body {
   margin: 0;
   font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--muted);
 }
 
@@ -74,9 +76,11 @@ body {
   margin: 4px 0 0;
   font-family: var(--font-display);
   font-size: 3.2rem;
+  font-weight: 700;
   line-height: 1;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 .field {
@@ -87,7 +91,7 @@ body {
   margin: 0;
   font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--muted);
 }
 
@@ -139,7 +143,7 @@ body {
 .spinner {
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(11, 110, 106, 0.2);
+  border: 2px solid rgba(242, 177, 52, 0.25);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -149,6 +153,116 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.delta {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.delta.up {
+  color: #7dcea0;
+}
+
+.delta.down {
+  color: #f5a5a0;
+}
+
+.delta.flat,
+.delta.first {
+  color: var(--muted);
+}
+
+.ready-actions {
+  margin-top: 12px;
+}
+
+.copy-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.trail {
+  border-top: 1px solid rgba(242, 177, 52, 0.14);
+  padding-top: 10px;
+}
+
+.trail-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.trail-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.trail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.trail-item {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.trail-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.trail-domain {
+  font-size: 0.78rem;
+  word-break: break-all;
+}
+
+.trail-score {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+.trail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.trail-note {
+  font-size: 0.7rem;
+  color: var(--muted);
 }
 
 @keyframes spin {

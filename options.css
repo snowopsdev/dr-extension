@@ -1,9 +1,11 @@
 :root {
-  --ink: #13202c;
-  --muted: #4a5d6e;
-  --accent: #0b6e6a;
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  --font-ui: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+  --ink: #f4f4f4;
+  --muted: #a8a8a8;
+  --accent: #f2b134;
+  --accent-ink: #1a1a1a;
+  --panel: rgba(255, 255, 255, 0.06);
+  --font-display: "Futura", "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-ui: "Gill Sans", "Trebuchet MS", "Segoe UI", sans-serif;
 }
 
 * {
@@ -15,8 +17,9 @@ body {
   color: var(--ink);
   font-family: var(--font-ui);
   background:
-    radial-gradient(120% 90% at 0% 0%, #d7ecea 0%, transparent 55%),
-    linear-gradient(160deg, #f3f7f8 0%, #e8eef2 100%);
+    radial-gradient(110% 80% at 0% 0%, rgba(242, 177, 52, 0.16) 0%, transparent 55%),
+    linear-gradient(165deg, #1a1a1a 0%, #121212 100%);
+  min-height: 100vh;
 }
 
 .shell {
@@ -27,8 +30,10 @@ body {
 h1 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.4rem;
-  letter-spacing: -0.02em;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .lede {
@@ -42,7 +47,7 @@ label {
   display: block;
   font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--muted);
   margin-bottom: 6px;
 }
@@ -50,10 +55,15 @@ label {
 input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid rgba(19, 32, 44, 0.15);
+  border: 1px solid rgba(242, 177, 52, 0.28);
   border-radius: 8px;
   font: inherit;
-  background: rgba(255, 255, 255, 0.85);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+input::placeholder {
+  color: #6b6b6b;
 }
 
 .hint {
@@ -76,16 +86,20 @@ button {
   border: 0;
   border-radius: 8px;
   padding: 8px 14px;
-  font: inherit;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
 }
 
 button.secondary {
   background: transparent;
   color: var(--accent);
-  border: 1px solid rgba(11, 110, 106, 0.35);
+  border: 1px solid rgba(242, 177, 52, 0.45);
 }
 
 .status {
@@ -97,4 +111,5 @@ button.secondary {
 
 code {
   font-size: 0.85em;
+  color: #d4d4d4;
 }

@@ -13,6 +13,7 @@ mkdirSync(stage, { recursive: true });
 
 const include = [
   "manifest.json",
+  "background.js",
   "popup.html",
   "popup.css",
   "popup.js",

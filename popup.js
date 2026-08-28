@@ -1,19 +1,49 @@
 import { fetchDomainRating } from "./lib/api.js";
 import { errorMessage, hostnameFromUrl } from "./lib/domain.js";
 import { loadApiKey } from "./lib/storage.js";
+import {
+  TRAIL_UI_LIMIT,
+  clearTrail,
+  formatCopyLine,
+  formatDeltaText,
+  formatRelativeDay,
+  formatTrailRating,
+  loadTrail,
+  recordObservation,
+  trailDelta,
+} from "./lib/trail.js";
 
 const domainEl = document.getElementById("domain");
 const panelEl = document.getElementById("panel");
+const trailSection = document.getElementById("trail");
+const trailList = document.getElementById("trail-list");
 const openOptionsBtn = document.getElementById("open-options");
+const clearTrailBtn = document.getElementById("clear-trail");
 
 openOptionsBtn.addEventListener("click", () => {
   chrome.runtime.openOptionsPage();
 });
 
+clearTrailBtn.addEventListener("click", async () => {
+  await clearTrail();
+  await renderTrail([]);
+});
+
+trailList.addEventListener("click", async (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  const button = target.closest("[data-copy]");
+  if (!(button instanceof HTMLElement)) return;
+  const line = button.getAttribute("data-copy");
+  if (!line) return;
+  await copyText(line, button);
+});
+
 /**
  * @param {import('./lib/domain.js').ViewState} state
+ * @param {import('./lib/trail.js').TrailEntry | null} [entry]
  */
-function render(state) {
+function render(state, entry = null) {
   switch (state.status) {
     case "needs_key":
       domainEl.textContent = "Setup required";
@@ -34,11 +64,17 @@ function render(state) {
         </div>
       `;
       return;
-    case "ready":
+    case "ready": {
       domainEl.textContent = state.domain;
+      const copyLine = formatCopyLine(state.domain, state.data.rating);
+      const deltaHtml = entry ? renderDeltaHtml(entry) : "";
       panelEl.innerHTML = `
         <p class="rating-label">domain_rating</p>
-        <p class="rating-value">${escapeHtml(formatRating(state.data.rating))}</p>
+        <p class="rating-value">${escapeHtml(formatTrailRating(state.data.rating))}</p>
+        ${deltaHtml}
+        <div class="ready-actions">
+          <button type="button" class="copy-btn" data-copy-main="${escapeAttr(copyLine)}">Copy</button>
+        </div>
         <div class="field">
           <p class="field-label">license</p>
           <p class="field-value">
@@ -46,7 +82,15 @@ function render(state) {
           </p>
         </div>
       `;
+      const copyMain = panelEl.querySelector("[data-copy-main]");
+      if (copyMain instanceof HTMLElement) {
+        copyMain.addEventListener("click", async () => {
+          const line = copyMain.getAttribute("data-copy-main");
+          if (line) await copyText(line, copyMain);
+        });
+      }
       return;
+    }
     case "error":
       domainEl.textContent = state.domain || "Unavailable";
       panelEl.innerHTML = `<p class="error">${escapeHtml(errorMessage(state.error))}</p>`;
@@ -60,10 +104,69 @@ function render(state) {
 }
 
 /**
- * @param {number} rating
+ * @param {import('./lib/trail.js').TrailEntry} entry
  */
-function formatRating(rating) {
-  return Number.isInteger(rating) ? String(rating) : rating.toFixed(1);
+function renderDeltaHtml(entry) {
+  const delta = trailDelta(entry);
+  if (delta.kind === "first") {
+    return `<p class="delta first">First look</p>`;
+  }
+  const label = formatDeltaText(delta.delta);
+  const cls =
+    delta.delta > 0 ? "up" : delta.delta < 0 ? "down" : "flat";
+  return `<p class="delta ${cls}">${escapeHtml(label)} since ${escapeHtml(formatRelativeDay(delta.since))}</p>`;
+}
+
+/**
+ * @param {import('./lib/trail.js').TrailEntry[]} entries
+ */
+async function renderTrail(entries) {
+  const recent = entries.slice(0, TRAIL_UI_LIMIT);
+  if (recent.length === 0) {
+    trailSection.hidden = true;
+    trailList.innerHTML = "";
+    return;
+  }
+  trailSection.hidden = false;
+  trailList.innerHTML = recent
+    .map((entry) => {
+      const line = formatCopyLine(entry.domain, entry.rating);
+      const delta = trailDelta(entry);
+      const meta =
+        delta.kind === "first"
+          ? "first look"
+          : `${formatDeltaText(delta.delta)} · ${formatRelativeDay(entry.seenAt)}`;
+      return `
+        <li class="trail-item">
+          <div class="trail-meta">
+            <span class="trail-domain">${escapeHtml(entry.domain)}</span>
+            <span class="trail-score">${escapeHtml(formatTrailRating(entry.rating))}</span>
+          </div>
+          <div class="trail-row">
+            <span class="trail-note">${escapeHtml(meta)}</span>
+            <button type="button" class="linkish" data-copy="${escapeAttr(line)}">Copy</button>
+          </div>
+        </li>
+      `;
+    })
+    .join("");
+}
+
+/**
+ * @param {string} text
+ * @param {HTMLElement} button
+ */
+async function copyText(text, button) {
+  try {
+    await navigator.clipboard.writeText(text);
+    const prior = button.textContent;
+    button.textContent = "Copied";
+    setTimeout(() => {
+      button.textContent = prior;
+    }, 1200);
+  } catch {
+    button.textContent = "Failed";
+  }
 }
 
 /**
@@ -85,6 +188,9 @@ function escapeAttr(value) {
 }
 
 async function main() {
+  const trail = await loadTrail();
+  await renderTrail(trail);
+
   const key = await loadApiKey();
   if (!key) {
     render({ status: "needs_key" });
@@ -114,7 +220,19 @@ async function main() {
   render({ status: "loading", domain });
   const result = await fetchDomainRating({ domain, key });
   if (result.ok) {
-    render({ status: "ready", domain, data: result.data });
+    const nextTrail = await recordObservation(domain, result.data.rating);
+    const entry = nextTrail.find((row) => row.domain === domain) || null;
+    render({ status: "ready", domain, data: result.data }, entry);
+    await renderTrail(nextTrail);
+    if (typeof tab.id === "number") {
+      chrome.runtime.sendMessage({
+        type: "badge.set",
+        tabId: tab.id,
+        domain,
+        rating: result.data.rating,
+        licenseUrl: result.data.licenseUrl,
+      });
+    }
     return;
   }
   render({ status: "error", domain, error: result.error });

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy — Domain Rating Lookup</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #f4f4f4;
+        --muted: #a8a8a8;
+        --accent: #f2b134;
+        --bg: #121212;
+      }
+      body {
+        margin: 0;
+        font-family: "Gill Sans", "Trebuchet MS", "Segoe UI", sans-serif;
+        font-size: 1rem;
+        background: var(--bg);
+        color: var(--ink);
+        line-height: 1.55;
+      }
+      main {
+        max-width: 40rem;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 3rem;
+      }
+      h1 {
+        font-family: Futura, "Trebuchet MS", "Segoe UI", sans-serif;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-size: 2rem;
+        line-height: 1.15;
+        margin: 0 0 0.5rem;
+      }
+      h2 {
+        font-family: Futura, "Trebuchet MS", "Segoe UI", sans-serif;
+        font-size: 1.25rem;
+        line-height: 1.25;
+        margin-top: 2rem;
+        margin-bottom: 0.75rem;
+        color: var(--accent);
+      }
+      p,
+      li {
+        color: var(--ink);
+        font-size: 1rem;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 0.8rem;
+        margin-bottom: 1.5rem;
+      }
+      a {
+        color: var(--accent);
+      }
+      code {
+        font-size: 0.9em;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Privacy Policy — Domain Rating Lookup</h1>
+      <p class="meta">Last updated: 2026-08-28</p>
+
+      <h2>Summary</h2>
+      <p>
+        Domain Rating Lookup is a Chrome extension that shows Ahrefs Domain
+        Rating for the site in your active browser tab. It does not run ads,
+        sell data, or track you across the web.
+      </p>
+
+      <h2>Data the extension handles</h2>
+      <ol>
+        <li>
+          <strong>Active tab hostname.</strong> The extension reads the URL of
+          the active tab to extract the hostname for Domain Rating lookups and
+          to show the score on the toolbar badge. It does not read page content.
+        </li>
+        <li>
+          <strong>Ahrefs API key.</strong> If you paste a free Ahrefs APIv3 key
+          into Options, it is stored only in Chrome local storage on this
+          browser (not synced across devices). The key is sent only to
+          <code>https://api.ahrefs.com</code> as an
+          <code>Authorization: Bearer</code> header when you request a Domain
+          Rating lookup.
+        </li>
+        <li>
+          <strong>API response fields.</strong> The extension displays the
+          documented fields returned by Ahrefs for your lookup
+          (<code>domain_rating</code> and <code>license</code>), including as
+          badge text on the action icon. Responses are not uploaded to any third
+          party other than Ahrefs as part of that request.
+        </li>
+        <li>
+          <strong>Local Domain Rating trail.</strong> After a successful lookup,
+          the extension may store the hostname and Domain Rating (plus a previous
+          rating for delta display) in Chrome local storage on this browser only.
+          This powers the recent list and “since last visit” delta in the popup.
+          It is never uploaded or synced by this extension. Use
+          <strong>Clear</strong> in the popup to remove the trail; uninstalling
+          the extension also removes it.
+        </li>
+      </ol>
+
+      <h2>Data the extension does not collect</h2>
+      <ul>
+        <li>No analytics, crash reporting, or advertising identifiers</li>
+        <li>No account system operated by this extension</li>
+        <li>
+          No remote browsing-history logging (any recent DR trail stays on this
+          browser only)
+        </li>
+        <li>No sale or sharing of personal information with data brokers</li>
+      </ul>
+
+      <h2>Third parties</h2>
+      <p>
+        Lookups are sent to Ahrefs (<code>api.ahrefs.com</code>) under Ahrefs’
+        terms and the Domain Rating License. Review Ahrefs’ own policies for how
+        they process API requests.
+      </p>
+
+      <h2>Permissions</h2>
+      <ul>
+        <li>
+          <code>activeTab</code> — access the active tab URL when you use the
+          extension action
+        </li>
+        <li>
+          <code>tabs</code> — read tab URLs on navigation so the toolbar badge
+          can show Domain Rating for the current site
+        </li>
+        <li>
+          <code>storage</code> — store your API key and optional local Domain
+          Rating trail on this browser
+        </li>
+        <li>
+          Host access to <code>https://api.ahrefs.com/*</code> — perform Domain
+          Rating lookups
+        </li>
+      </ul>
+
+      <h2>Your controls</h2>
+      <p>
+        Open the extension Options page to change or clear your API key. In the
+        popup, use <strong>Clear</strong> to delete the local Domain Rating
+        trail. Removing the extension deletes its locally stored data.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        Privacy questions:
+        <a href="mailto:aj@snowops.dev">aj@snowops.dev</a>
+        or
+        <a href="https://github.com/snowopsdev/dr-extension/issues"
+          >GitHub Issues</a
+        >.
+      </p>
+    </main>
+  </body>
+</html>

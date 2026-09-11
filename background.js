@@ -7,7 +7,7 @@ import {
   isPrefetchPauseError,
 } from "./lib/domain.js";
 import { loadApiKey } from "./lib/storage.js";
-import { recordObservation } from "./lib/trail.js";
+import { migrateTrailIfNeeded, recordObservation } from "./lib/trail.js";
 
 const CACHE_TTL_MS = 60 * 60 * 1000;
 const CACHE_STORAGE_KEY = "drBadgeCache";
@@ -19,9 +19,13 @@ const VALIDATE_HOST = "example.com";
 
 /** @type {ReturnType<typeof setTimeout> | null} */
 let refreshTimer = null;
+/** @type {number | undefined} */
+let scheduledWindowId;
+/** @type {Map<string, Promise<import('./lib/domain.js').FetchResult>>} */
+const fetchesInFlight = new Map();
 
 chrome.runtime.onInstalled.addListener(() => {
-  void refreshActiveTab();
+  void migrateTrailIfNeeded().then(() => refreshActiveTab());
 });
 
 chrome.runtime.onStartup.addListener(() => {
@@ -36,6 +40,11 @@ chrome.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
   if (changeInfo.status !== "complete" && !changeInfo.url) return;
   if (tab.active === false) return;
   scheduleRefreshActiveTab();
+});
+
+chrome.windows.onFocusChanged.addListener((windowId) => {
+  if (windowId === chrome.windows.WINDOW_ID_NONE) return;
+  scheduleRefreshActiveTab(windowId);
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
@@ -89,14 +98,36 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 });
 
-function scheduleRefreshActiveTab() {
+/**
+ * @param {number} [windowId]
+ */
+function scheduleRefreshActiveTab(windowId) {
+  scheduledWindowId = windowId;
   if (refreshTimer) {
     clearTimeout(refreshTimer);
   }
   refreshTimer = setTimeout(() => {
     refreshTimer = null;
-    void refreshActiveTab();
+    const id = scheduledWindowId;
+    scheduledWindowId = undefined;
+    void refreshActiveTab(id);
   }, TAB_REFRESH_DEBOUNCE_MS);
+}
+
+/**
+ * Share in-flight Ahrefs GETs for the same key+domain (badge + popup after save).
+ * @param {{ domain: string, key: string }} args
+ * @returns {Promise<import('./lib/domain.js').FetchResult>}
+ */
+function fetchDomainRatingShared({ domain, key }) {
+  const flightKey = `${domain}\0${key}`;
+  const existing = fetchesInFlight.get(flightKey);
+  if (existing) return existing;
+  const pending = fetchDomainRating({ domain, key }).finally(() => {
+    fetchesInFlight.delete(flightKey);
+  });
+  fetchesInFlight.set(flightKey, pending);
+  return pending;
 }
 
 /**
@@ -174,13 +205,15 @@ async function currentGeneration(tabId) {
 }
 
 /**
+ * @param {number} [windowId]
  * @returns {Promise<void>}
  */
-async function refreshActiveTab() {
-  const [tab] = await chrome.tabs.query({
-    active: true,
-    lastFocusedWindow: true,
-  });
+async function refreshActiveTab(windowId) {
+  const query =
+    typeof windowId === "number"
+      ? { active: true, windowId }
+      : { active: true, lastFocusedWindow: true };
+  const [tab] = await chrome.tabs.query(query);
   if (tab?.id != null) {
     await refreshTab(tab.id, tab.url);
   }
@@ -270,7 +303,7 @@ async function lookupDomain({
     });
   }
 
-  const result = await fetchDomainRating({ domain, key });
+  const result = await fetchDomainRatingShared({ domain, key });
   if (!result.ok) {
     if (isPrefetchPauseError(result.error)) {
       await pausePrefetch(result.error);

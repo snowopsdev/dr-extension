@@ -172,7 +172,7 @@ https://github.com/snowopsdev/dr-extension
 
 - Zip: `dist/domain-rating-lookup.zip` (rebuild with `npm run package`)
 - Manifest version: `1.3.0`
-- Reload checklist: popup Options → save key (invalid key is rejected) → visit https site → badge shows rating without adding trail → open popup → site appears in Recent → paste a domain → Copy all / Open → Clear removes trail
+- Reload checklist: popup Options → save key (invalid key is rejected; valid key should trigger one badge lookup, not two or three) → visit https site → badge shows rating without adding trail → open popup → site appears in Recent → paste a domain during the first fetch → pasted result wins → Copy all / Open → Clear removes trail. Upgrade from 1.2.1 clears the old trail.
 
 ### Known Issues / Limitations
 

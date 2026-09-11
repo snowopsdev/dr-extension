@@ -12,11 +12,13 @@ import {
 } from "../lib/domain.js";
 import {
   TRAIL_MAX_ENTRIES,
+  TRAIL_SCHEMA_EXPLICIT,
   applyObservation,
   formatCopyLine,
   formatDeltaText,
   formatTrailTsv,
   parseTrail,
+  shouldResetLegacyTrail,
   trailDelta,
 } from "../lib/trail.js";
 
@@ -184,5 +186,10 @@ assert.deepEqual(parseTrail([{ domain: "a.com", rating: "x", seenAt: 1 }]), []);
   );
   assert.equal(formatTrailTsv([]), "domain\tdr\tseenAt\tpreviousDr");
 }
+
+assert.equal(shouldResetLegacyTrail(undefined), true);
+assert.equal(shouldResetLegacyTrail(1), true);
+assert.equal(shouldResetLegacyTrail("2"), true);
+assert.equal(shouldResetLegacyTrail(TRAIL_SCHEMA_EXPLICIT), false);
 
 console.log("test-domain: ok");

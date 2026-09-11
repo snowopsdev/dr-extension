@@ -38,8 +38,8 @@ const showKeyToggle = document.getElementById("show-key");
 
 /** @type {'main' | 'settings'} */
 let view = "main";
-/** @type {boolean} */
-let lookupRunning = false;
+/** @type {number} */
+let lookupSeq = 0;
 /** @type {string | null} */
 let displayedDomain = null;
 /** @type {number | null} */
@@ -320,91 +320,90 @@ function escapeAttr(value) {
  * @returns {Promise<void>}
  */
 async function runLookup(opts = {}) {
-  if (lookupRunning) return;
-  lookupRunning = true;
-  try {
-    const trail = await loadTrail();
-    await renderTrail(trail);
+  const seq = ++lookupSeq;
+  const trail = await loadTrail();
+  if (seq !== lookupSeq) return;
+  await renderTrail(trail);
 
-    const key = await loadApiKey();
-    if (!key) {
-      render({ status: "needs_key" });
-      return;
-    }
+  const key = await loadApiKey();
+  if (seq !== lookupSeq) return;
+  if (!key) {
+    render({ status: "needs_key" });
+    return;
+  }
 
-    lookupSection.hidden = view !== "main";
-    if (view !== "main") return;
+  lookupSection.hidden = view !== "main";
+  if (view !== "main") return;
 
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    const requestedDomain = opts.domain || null;
-    let domain = requestedDomain;
-    /** @type {number | undefined} */
-    let tabId;
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (seq !== lookupSeq) return;
+  const requestedDomain = opts.domain || null;
+  let domain = requestedDomain;
+  /** @type {number | undefined} */
+  let tabId;
 
-    if (!domain) {
-      if (!tab) {
-        render({
-          status: "error",
-          domain: null,
-          error: { kind: "no_tab" },
-        });
-        return;
-      }
-      domain = hostnameFromUrl(tab.url);
-      if (typeof tab.id === "number") tabId = tab.id;
-    } else if (typeof tab?.id === "number") {
-      tabId = tab.id;
-    }
-
-    if (!domain) {
+  if (!domain) {
+    if (!tab) {
       render({
         status: "error",
         domain: null,
-        error: { kind: "unsupported_page" },
+        error: { kind: "no_tab" },
       });
       return;
     }
+    domain = hostnameFromUrl(tab.url);
+    if (typeof tab.id === "number") tabId = tab.id;
+  } else if (typeof tab?.id === "number") {
+    tabId = tab.id;
+  }
 
-    render({ status: "loading", domain });
-    /** @type {(import('./lib/domain.js').FetchResult & { domain?: string | null }) | undefined} */
-    let result;
-    try {
-      result = await chrome.runtime.sendMessage({
-        type: "rating.get",
-        domain,
-        tabId,
-        recordTrail: opts.recordTrail !== false,
-      });
-    } catch {
-      if (view !== "main") return;
-      render({
-        status: "error",
-        domain,
-        error: {
-          kind: "network",
-          detail: "Could not reach the lookup service.",
-        },
-      });
-      return;
-    }
+  if (!domain) {
+    render({
+      status: "error",
+      domain: null,
+      error: { kind: "unsupported_page" },
+    });
+    return;
+  }
 
-    if (view !== "main") return;
-
-    if (result?.ok) {
-      const nextTrail = await loadTrail();
-      const entry = nextTrail.find((row) => row.domain === domain) || null;
-      render({ status: "ready", domain, data: result.data }, entry);
-      await renderTrail(nextTrail);
-      return;
-    }
+  render({ status: "loading", domain });
+  /** @type {(import('./lib/domain.js').FetchResult & { domain?: string | null }) | undefined} */
+  let result;
+  try {
+    result = await chrome.runtime.sendMessage({
+      type: "rating.get",
+      domain,
+      tabId,
+      recordTrail: opts.recordTrail !== false,
+    });
+  } catch {
+    if (seq !== lookupSeq || view !== "main") return;
     render({
       status: "error",
       domain,
-      error: result?.error || { kind: "network", detail: "Lookup failed." },
+      error: {
+        kind: "network",
+        detail: "Could not reach the lookup service.",
+      },
     });
-  } finally {
-    lookupRunning = false;
+    return;
   }
+
+  if (seq !== lookupSeq || view !== "main") return;
+
+  if (result?.ok) {
+    const nextTrail = await loadTrail();
+    if (seq !== lookupSeq || view !== "main") return;
+    const entry = nextTrail.find((row) => row.domain === domain) || null;
+    render({ status: "ready", domain, data: result.data }, entry);
+    await renderTrail(nextTrail);
+    return;
+  }
+  render({
+    status: "error",
+    domain,
+    error: result?.error || { kind: "network", detail: "Lookup failed." },
+  });
 }
 
 void runLookup({ recordTrail: true });

@@ -8,7 +8,7 @@ Chrome extension that shows **Ahrefs Domain Rating** for the site in your active
 
 <div align="center">
   <img src="store/promo/small-promo-440x280.png" alt="Domain Rating Lookup promo" />
-  <p><strong>v1.2.1</strong> · <a href="https://github.com/snowopsdev/dr-extension/releases/tag/v1.2.1">GitHub Release</a> · <a href="https://chromewebstore.google.com/detail/domain-rating-lookup/bmhkggondppljacnlenomikfogbppidc">Chrome Web Store download</a></p>
+  <p><strong>v1.3.0</strong> · <a href="https://github.com/snowopsdev/dr-extension">GitHub</a> · <a href="https://chromewebstore.google.com/detail/domain-rating-lookup/bmhkggondppljacnlenomikfogbppidc">Chrome Web Store download</a></p>
 </div>
 
 ---
@@ -21,11 +21,12 @@ Chrome extension that shows **Ahrefs Domain Rating** for the site in your active
 
 ## Features
 
-- **Toolbar badge** — Domain Rating for the current http(s) site
-- **Popup** — large rating, score delta since last visit, one-click copy (`example.com — DR 94`)
-- **Recent trail** — local history of domains you looked up, with Clear
-- **In-popup Options** — paste your free Ahrefs APIv3 key (stored only in this browser)
-- **Privacy-minded** — no analytics; key and trail stay local; lookups go only to Ahrefs
+- **Toolbar badge** — Domain Rating for the current http(s) site (active tab only)
+- **Popup** — large rating, score delta since last saved look, one-click copy (`example.com — DR 94`)
+- **Look up a domain** — paste a hostname without visiting it
+- **Recent trail** — local list of domains you explicitly looked up (popup, Save to trail, or paste), with Copy all (TSV) and Open
+- **In-popup Options** — paste your free Ahrefs APIv3 key; Save checks the key before storing it
+- **Privacy-minded** — no analytics; key and trail stay local; lookups go only to Ahrefs; browsing does not fill the trail
 
 ## Install
 
@@ -47,15 +48,18 @@ Chrome extension that shows **Ahrefs Domain Rating** for the site in your active
 
 1. Visit any http or https page
 2. Read Domain Rating on the toolbar badge
-3. Click the icon for details, copy, and your recent trail
-4. Open **Options** inside the popup anytime to change or clear your key
+3. Click the icon for details, copy, Save to trail, and your recent list
+4. Paste a domain in the popup to look it up without opening the site
+5. Open **Options** inside the popup anytime to change or clear your key
+
+The toolbar may cache a score for about an hour so the badge can update as you switch tabs. That cache is not the Recent trail. The trail only grows when you open the popup on a site, click **Save to trail**, or look up a pasted domain.
 
 ## Privacy
 
 See [`store/PRIVACY.md`](store/PRIVACY.md) or the hosted policy:  
 https://gist.github.com/snowopsdev/8ce34b2d81c64daa4bb0d1f331650297
 
-Your API key and Domain Rating trail are stored in Chrome local storage on this browser only. Hostnames are sent to Ahrefs only when looking up Domain Rating.
+Your API key and Domain Rating trail are stored in Chrome local storage on this browser only. Hostnames are sent to Ahrefs only when looking up Domain Rating (active-tab badge, popup, pasted domain, or a one-time example.com check when you save a key). The Recent trail is not a browsing log.
 
 ## Attribution
 

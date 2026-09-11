@@ -1,6 +1,11 @@
-import { fetchDomainRating } from "./lib/api.js";
-import { errorMessage, hostnameFromUrl } from "./lib/domain.js";
-import { clearApiKey, loadApiKey, saveApiKey } from "./lib/storage.js";
+import {
+  errorMessage,
+  hostnameFromInput,
+  hostnameFromUrl,
+  httpsUrlForDomain,
+} from "./lib/domain.js";
+import { loadApiKey } from "./lib/storage.js";
+import { bindKeyForm } from "./lib/settings.js";
 import {
   TRAIL_UI_LIMIT,
   clearTrail,
@@ -8,6 +13,7 @@ import {
   formatDeltaText,
   formatRelativeDay,
   formatTrailRating,
+  formatTrailTsv,
   loadTrail,
   recordObservation,
   trailDelta,
@@ -16,19 +22,37 @@ import {
 const domainEl = document.getElementById("domain");
 const panelEl = document.getElementById("panel");
 const settingsEl = document.getElementById("settings");
+const lookupSection = document.getElementById("lookup");
+const lookupForm = document.getElementById("lookup-form");
+const lookupInput = document.getElementById("lookup-input");
 const trailSection = document.getElementById("trail");
 const trailList = document.getElementById("trail-list");
 const optionsToggle = document.getElementById("options-toggle");
 const clearTrailBtn = document.getElementById("clear-trail");
+const copyTrailBtn = document.getElementById("copy-trail");
 const settingsForm = document.getElementById("settings-form");
 const apiKeyInput = document.getElementById("api-key");
 const clearKeyBtn = document.getElementById("clear-key");
 const settingsStatus = document.getElementById("settings-status");
+const showKeyToggle = document.getElementById("show-key");
 
 /** @type {'main' | 'settings'} */
 let view = "main";
 /** @type {boolean} */
 let lookupRunning = false;
+/** @type {string | null} */
+let displayedDomain = null;
+/** @type {number | null} */
+let displayedRating = null;
+
+bindKeyForm({
+  form: settingsForm,
+  input: apiKeyInput,
+  clearBtn: clearKeyBtn,
+  statusEl: settingsStatus,
+  showKeyToggle: showKeyToggle instanceof HTMLInputElement ? showKeyToggle : null,
+  onSaved: () => showMain(),
+});
 
 optionsToggle.addEventListener("click", async () => {
   if (view === "settings") {
@@ -43,29 +67,43 @@ clearTrailBtn.addEventListener("click", async () => {
   await renderTrail([]);
 });
 
-clearKeyBtn.addEventListener("click", async () => {
-  await clearApiKey();
-  apiKeyInput.value = "";
-  settingsStatus.textContent = "Cleared.";
-  chrome.runtime.sendMessage({ type: "badge.refresh" });
+copyTrailBtn.addEventListener("click", async () => {
+  const trail = await loadTrail();
+  await copyText(formatTrailTsv(trail), copyTrailBtn);
 });
 
-settingsForm.addEventListener("submit", async (event) => {
+lookupForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  await saveApiKey(apiKeyInput.value);
-  settingsStatus.textContent = "Saved locally.";
-  chrome.runtime.sendMessage({ type: "badge.refresh" });
-  await showMain();
+  const domain = hostnameFromInput(lookupInput.value);
+  if (!domain) {
+    render({
+      status: "error",
+      domain: lookupInput.value.trim() || null,
+      error: { kind: "unsupported_page" },
+    });
+    return;
+  }
+  lookupInput.value = domain;
+  await runLookup({ domain, recordTrail: true });
 });
 
 trailList.addEventListener("click", async (event) => {
   const target = event.target;
   if (!(target instanceof HTMLElement)) return;
-  const button = target.closest("[data-copy]");
-  if (!(button instanceof HTMLElement)) return;
-  const line = button.getAttribute("data-copy");
-  if (!line) return;
-  await copyText(line, button);
+  const copyButton = target.closest("[data-copy]");
+  if (copyButton instanceof HTMLElement) {
+    const line = copyButton.getAttribute("data-copy");
+    if (line) await copyText(line, copyButton);
+    return;
+  }
+  const openButton = target.closest("[data-open]");
+  if (openButton instanceof HTMLElement) {
+    const host = openButton.getAttribute("data-open");
+    const url = httpsUrlForDomain(host || "");
+    if (url) {
+      await chrome.tabs.create({ url });
+    }
+  }
 });
 
 /**
@@ -75,11 +113,13 @@ async function showSettings() {
   view = "settings";
   optionsToggle.textContent = "Back";
   panelEl.hidden = true;
+  lookupSection.hidden = true;
   trailSection.hidden = true;
   settingsEl.hidden = false;
   domainEl.textContent = "Options";
   apiKeyInput.value = await loadApiKey();
   settingsStatus.textContent = "";
+  settingsStatus.classList.remove("is-error");
   apiKeyInput.focus();
 }
 
@@ -91,7 +131,7 @@ async function showMain() {
   optionsToggle.textContent = "Options";
   settingsEl.hidden = true;
   panelEl.hidden = false;
-  await runLookup();
+  await runLookup({ recordTrail: true });
 }
 
 /**
@@ -99,9 +139,12 @@ async function showMain() {
  * @param {import('./lib/trail.js').TrailEntry | null} [entry]
  */
 function render(state, entry = null) {
+  displayedDomain = null;
+  displayedRating = null;
   switch (state.status) {
     case "needs_key":
       domainEl.textContent = "Setup required";
+      lookupSection.hidden = true;
       panelEl.innerHTML = `
         <p class="error">${escapeHtml(errorMessage({ kind: "missing_key" }))}</p>
         <p class="status" style="margin-top:10px">
@@ -126,6 +169,8 @@ function render(state, entry = null) {
       `;
       return;
     case "ready": {
+      displayedDomain = state.domain;
+      displayedRating = state.data.rating;
       domainEl.textContent = state.domain;
       const copyLine = formatCopyLine(state.domain, state.data.rating);
       const deltaHtml = entry ? renderDeltaHtml(entry) : "";
@@ -135,6 +180,7 @@ function render(state, entry = null) {
         ${deltaHtml}
         <div class="ready-actions">
           <button type="button" class="copy-btn" data-copy-main="${escapeAttr(copyLine)}">Copy</button>
+          <button type="button" class="linkish" id="save-to-trail">Save to trail</button>
         </div>
       `;
       const copyMain = panelEl.querySelector("[data-copy-main]");
@@ -142,6 +188,12 @@ function render(state, entry = null) {
         copyMain.addEventListener("click", async () => {
           const line = copyMain.getAttribute("data-copy-main");
           if (line) await copyText(line, copyMain);
+        });
+      }
+      const saveBtn = panelEl.querySelector("#save-to-trail");
+      if (saveBtn instanceof HTMLElement) {
+        saveBtn.addEventListener("click", () => {
+          void saveDisplayedToTrail(saveBtn);
         });
       }
       return;
@@ -156,6 +208,20 @@ function render(state, entry = null) {
       panelEl.innerHTML = `<p class="error">Something went wrong.</p>`;
     }
   }
+}
+
+/**
+ * @param {HTMLElement} button
+ */
+async function saveDisplayedToTrail(button) {
+  if (!displayedDomain || displayedRating == null) return;
+  const nextTrail = await recordObservation(displayedDomain, displayedRating);
+  await renderTrail(nextTrail);
+  const prior = button.textContent;
+  button.textContent = "Saved";
+  setTimeout(() => {
+    button.textContent = prior;
+  }, 1200);
 }
 
 /**
@@ -198,12 +264,15 @@ async function renderTrail(entries) {
       return `
         <li class="trail-item">
           <div class="trail-meta">
-            <span class="trail-domain">${escapeHtml(entry.domain)}</span>
+            <button type="button" class="trail-domain linkish" data-copy="${escapeAttr(line)}" data-label="${escapeAttr(entry.domain)}">${escapeHtml(entry.domain)}</button>
             <span class="trail-score">${escapeHtml(formatTrailRating(entry.rating))}</span>
           </div>
           <div class="trail-row">
             <span class="trail-note">${escapeHtml(meta)}</span>
-            <button type="button" class="linkish" data-copy="${escapeAttr(line)}">Copy</button>
+            <div class="trail-row-actions">
+              <button type="button" class="linkish" data-copy="${escapeAttr(line)}">Copy</button>
+              <button type="button" class="linkish" data-open="${escapeAttr(entry.domain)}">Open</button>
+            </div>
           </div>
         </li>
       `;
@@ -216,12 +285,12 @@ async function renderTrail(entries) {
  * @param {HTMLElement} button
  */
 async function copyText(text, button) {
+  const restoreTo = button.getAttribute("data-label") || button.textContent;
   try {
     await navigator.clipboard.writeText(text);
-    const prior = button.textContent;
     button.textContent = "Copied";
     setTimeout(() => {
-      button.textContent = prior;
+      button.textContent = restoreTo;
     }, 1200);
   } catch {
     button.textContent = "Failed";
@@ -247,9 +316,10 @@ function escapeAttr(value) {
 }
 
 /**
+ * @param {{ domain?: string, recordTrail?: boolean }} [opts]
  * @returns {Promise<void>}
  */
-async function runLookup() {
+async function runLookup(opts = {}) {
   if (lookupRunning) return;
   lookupRunning = true;
   try {
@@ -262,17 +332,30 @@ async function runLookup() {
       return;
     }
 
+    lookupSection.hidden = view !== "main";
+    if (view !== "main") return;
+
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab) {
-      render({
-        status: "error",
-        domain: null,
-        error: { kind: "no_tab" },
-      });
-      return;
+    const requestedDomain = opts.domain || null;
+    let domain = requestedDomain;
+    /** @type {number | undefined} */
+    let tabId;
+
+    if (!domain) {
+      if (!tab) {
+        render({
+          status: "error",
+          domain: null,
+          error: { kind: "no_tab" },
+        });
+        return;
+      }
+      domain = hostnameFromUrl(tab.url);
+      if (typeof tab.id === "number") tabId = tab.id;
+    } else if (typeof tab?.id === "number") {
+      tabId = tab.id;
     }
 
-    const domain = hostnameFromUrl(tab.url);
     if (!domain) {
       render({
         status: "error",
@@ -283,27 +366,45 @@ async function runLookup() {
     }
 
     render({ status: "loading", domain });
-    const result = await fetchDomainRating({ domain, key });
-    if (result.ok) {
-      const nextTrail = await recordObservation(domain, result.data.rating);
+    /** @type {(import('./lib/domain.js').FetchResult & { domain?: string | null }) | undefined} */
+    let result;
+    try {
+      result = await chrome.runtime.sendMessage({
+        type: "rating.get",
+        domain,
+        tabId,
+        recordTrail: opts.recordTrail !== false,
+      });
+    } catch {
+      if (view !== "main") return;
+      render({
+        status: "error",
+        domain,
+        error: {
+          kind: "network",
+          detail: "Could not reach the lookup service.",
+        },
+      });
+      return;
+    }
+
+    if (view !== "main") return;
+
+    if (result?.ok) {
+      const nextTrail = await loadTrail();
       const entry = nextTrail.find((row) => row.domain === domain) || null;
       render({ status: "ready", domain, data: result.data }, entry);
       await renderTrail(nextTrail);
-      if (typeof tab.id === "number") {
-        chrome.runtime.sendMessage({
-          type: "badge.set",
-          tabId: tab.id,
-          domain,
-          rating: result.data.rating,
-          licenseUrl: result.data.licenseUrl,
-        });
-      }
       return;
     }
-    render({ status: "error", domain, error: result.error });
+    render({
+      status: "error",
+      domain,
+      error: result?.error || { kind: "network", detail: "Lookup failed." },
+    });
   } finally {
     lookupRunning = false;
   }
 }
 
-void runLookup();
+void runLookup({ recordTrail: true });

@@ -1,6 +1,6 @@
 # Chrome Web Store Listing — Domain Rating Lookup
 
-> Last Updated: 2026-08-28
+> Last Updated: 2026-09-11
 
 ## Store Listing
 
@@ -17,10 +17,12 @@ See Domain Rating for the site you are viewing. Shows the score on the toolbar a
 See the Domain Rating for any website you visit. The score appears on the toolbar icon, and a quick popup shows the rating details.
 
 FEATURES
-• Toolbar badge shows Domain Rating for the current site
+• Toolbar badge shows Domain Rating for the current site (active tab only)
 • Popup shows Domain Rating with one-click copy
-• Local DR trail remembers sites you looked up, with score change since last visit
+• Paste a domain in the popup to look it up without visiting it
+• Local DR trail remembers domains you explicitly looked up (popup, Save to trail, or paste), with score change, Copy all (TSV), and Open
 • Recent list in the popup, with Clear to remove the local trail
+• Saving an API key checks it first; a rejected key is not stored
 • API key setup stays inside the popup Options screen
 • Works after you add your own free Ahrefs account key
 • Your key stays on this browser only and is used only to look up ratings
@@ -30,12 +32,13 @@ HOW TO USE
 2. Open Options inside the popup, paste a free Ahrefs API key from your Ahrefs account, then save
 3. Visit any http or https website
 4. Read the Domain Rating on the toolbar badge, or open the popup for details, delta, copy, and recent trail
+5. Optionally paste another domain, copy the trail as TSV, or open a listed site
 
 PRIVACY
-This extension does not run ads or analytics. It reads the hostname of the site you are viewing so it can look up Domain Rating, stores the API key you provide on your browser, and may keep a local Domain Rating trail (hostnames and ratings) for the recent list and delta. Lookups are sent only to Ahrefs. Clear removes the trail. See the privacy policy linked on this listing.
+This extension does not run ads or analytics. It reads the hostname of the active tab so it can look up Domain Rating, stores the API key you provide on your browser, and keeps a local Domain Rating trail only for domains you explicitly looked up (not a browsing log). Lookups are sent only to Ahrefs. Saving a key sends one check request for example.com. Clear removes the trail. See the privacy policy linked on this listing.
 
 PERMISSIONS
-• Tabs — needed so the toolbar badge can update when you switch sites
+• Tabs — needed so the toolbar badge can update when you switch sites, and so Open can load a trail domain in a new tab
 • Storage — needed to save your API key and optional local Domain Rating trail on this browser
 • Access to api.ahrefs.com — needed to look up Domain Rating
 
@@ -46,7 +49,7 @@ SUPPORT
 Questions or issues: https://github.com/snowopsdev/dr-extension/issues
 Contact: aj@snowops.dev
 
-Version 1.2.1 — In-popup Options, cleaner rating UI, DR trail with deltas and copy.
+Version 1.3.0 — Honest trail (explicit lookups only), fewer API calls, key check on save, paste-a-domain, TSV copy, www collapse.
 
 **Category** [REQUIRED]
 
@@ -86,8 +89,8 @@ English
 | Permission | Type | Justification |
 |------------|------|---------------|
 | `activeTab` | permissions | Read the URL of the tab when the user opens the popup, so Domain Rating can be looked up for that site. |
-| `tabs` | permissions | Read tab URLs when the user navigates or switches tabs, so the toolbar badge can show Domain Rating for the current site without requiring a click each time. |
-| `storage` | permissions | Save the user-provided Ahrefs API key and optional local Domain Rating trail (hostnames + ratings) in this browser’s local extension storage. |
+| `tabs` | permissions | Read the active tab URL when the user navigates or switches tabs, so the toolbar badge can show Domain Rating for the current site without requiring a click each time. Also used to open a trail domain in a new tab when the user clicks Open. |
+| `storage` | permissions | Save the user-provided Ahrefs API key and optional local Domain Rating trail (hostnames + ratings for explicit lookups) in this browser’s local extension storage. |
 | `https://api.ahrefs.com/*` | host_permissions | Call Ahrefs’ free Domain Rating endpoint to retrieve the rating shown in the badge and popup. |
 
 
@@ -106,7 +109,7 @@ English
 | Personal communications | No | No | — | No |
 | Location | No | No | — | No |
 | Web history | No | No | — | No |
-| User activity | Yes | Yes | Hostname of the site being viewed, used only to request Domain Rating for that domain. A short local trail of hostnames + ratings may also be stored on this browser for the popup recent list and delta (not uploaded). | Shared only with Ahrefs as the lookup target (trail stays local) |
+| User activity | Yes | Yes | Hostname of the active tab (and any domain you paste into the popup), used only to request Domain Rating. A short local trail of hostnames + ratings is stored only after you open the popup, click Save to trail, or complete a pasted lookup (not uploaded; not a browsing log). Saving a key also looks up example.com once to verify the token. | Shared only with Ahrefs as the lookup target (trail stays local) |
 | Website content | No | No | — | No |
 
 ### Data Use Certification
@@ -157,6 +160,7 @@ https://github.com/snowopsdev/dr-extension
 
 | Version | Date | Changes | Status |
 |---------|------|---------|--------|
+| 1.3.0 | 2026-09-11 | Trail writes only on explicit lookup; active-tab badge + 429 backoff; single Ahrefs client; key check on save; paste/TSV/Open; collapse www | Draft |
 | 1.2.1 | 2026-08-28 | In-popup Options (no chrome://extensions jump); remove license URL clutter; “domain rating” label | Submitted (CWS) / Released (GitHub `v1.2.1`) |
 | 1.2.0 | 2026-08-28 | DR trail, score delta, one-click copy; Graphite Amber UI; toolbar badges | Draft |
 | 1.1.0 | 2026-08-28 | First store-ready package draft (superseded before submit) | Draft |
@@ -167,8 +171,8 @@ https://github.com/snowopsdev/dr-extension
 ### Pre-submit package
 
 - Zip: `dist/domain-rating-lookup.zip` (rebuild with `npm run package`)
-- Manifest version: `1.2.1`
-- Reload checklist: popup Options → save key → visit https site → badge shows rating → popup shows rating + delta/copy + recent trail → Clear removes trail
+- Manifest version: `1.3.0`
+- Reload checklist: popup Options → save key (invalid key is rejected) → visit https site → badge shows rating without adding trail → open popup → site appears in Recent → paste a domain → Copy all / Open → Clear removes trail
 
 ### Known Issues / Limitations
 

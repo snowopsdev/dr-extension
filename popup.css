@@ -176,6 +176,42 @@ body {
 
 .ready-actions {
   margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.lookup-form {
+  display: flex;
+  gap: 8px;
+}
+
+.lookup-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(242, 177, 52, 0.28);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.lookup-form input::placeholder {
+  color: #6b6b6b;
 }
 
 .copy-btn {
@@ -203,6 +239,12 @@ body {
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 8px;
+}
+
+.trail-actions {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
 }
 
 .trail-title {
@@ -243,6 +285,7 @@ body {
 .trail-domain {
   font-size: 0.78rem;
   word-break: break-all;
+  text-align: left;
 }
 
 .trail-score {
@@ -263,6 +306,12 @@ body {
 .trail-note {
   font-size: 0.7rem;
   color: var(--muted);
+}
+
+.trail-row-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .settings-lede {
@@ -317,6 +366,28 @@ body {
   margin: 10px 0 0;
   font-size: 0.8rem;
   color: var(--accent);
+}
+
+.settings-status.is-error {
+  color: var(--danger);
+}
+
+.show-key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.show-key input {
+  width: auto;
+  padding: 0;
+  accent-color: var(--accent);
 }
 
 @keyframes spin {

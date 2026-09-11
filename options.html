@@ -25,6 +25,10 @@
           spellcheck="false"
           placeholder="Paste your free Bearer token"
         />
+        <label class="show-key">
+          <input id="show-key" type="checkbox" />
+          Show key
+        </label>
         <p class="hint">
           Create a key in
           <a
@@ -34,7 +38,8 @@
             >Ahrefs → Account → API keys</a
           >.
           Stored only in this browser via Chrome local storage. Never sent
-          anywhere except <code>api.ahrefs.com</code>.
+          anywhere except <code>api.ahrefs.com</code>. Saving checks the key
+          with a lookup of example.com.
         </p>
         <div class="actions">
           <button type="submit">Save key</button>

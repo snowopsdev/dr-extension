@@ -3,6 +3,7 @@
   --muted: #a8a8a8;
   --accent: #f2b134;
   --accent-ink: #1a1a1a;
+  --danger: #ff7b72;
   --panel: rgba(255, 255, 255, 0.06);
   --font-display: "Futura", "Trebuchet MS", "Segoe UI", sans-serif;
   --font-ui: "Gill Sans", "Trebuchet MS", "Segoe UI", sans-serif;
@@ -77,6 +78,24 @@ input::placeholder {
   color: var(--accent);
 }
 
+.show-key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.show-key input {
+  width: auto;
+  padding: 0;
+  accent-color: var(--accent);
+}
+
 .actions {
   display: flex;
   gap: 8px;
@@ -107,6 +126,10 @@ button.secondary {
   margin: 12px 0 0;
   font-size: 0.85rem;
   color: var(--accent);
+}
+
+.status.is-error {
+  color: var(--danger);
 }
 
 code {

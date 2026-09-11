@@ -62,7 +62,7 @@
   <body>
     <main>
       <h1>Privacy Policy — Domain Rating Lookup</h1>
-      <p class="meta">Last updated: 2026-08-28</p>
+      <p class="meta">Last updated: 2026-09-11</p>
 
       <h2>Summary</h2>
       <p>
@@ -77,6 +77,7 @@
           <strong>Active tab hostname.</strong> The extension reads the URL of
           the active tab to extract the hostname for Domain Rating lookups and
           to show the score on the toolbar badge. It does not read page content.
+          Badge lookups are limited to the active tab.
         </li>
         <li>
           <strong>Ahrefs API key.</strong> If you paste a free Ahrefs APIv3 key
@@ -84,22 +85,28 @@
           browser (not synced across devices). The key is sent only to
           <code>https://api.ahrefs.com</code> as an
           <code>Authorization: Bearer</code> header when you request a Domain
-          Rating lookup.
+          Rating lookup. Saving a key first checks it with one lookup of
+          <code>example.com</code>; a rejected key is not stored.
         </li>
         <li>
           <strong>API response fields.</strong> The extension shows Domain
           Rating from Ahrefs (including as badge text). Attribution appears in
           the popup footer. Responses are not uploaded to any third party other
-          than Ahrefs as part of that request.
+          than Ahrefs as part of that request. Successful badge lookups may be
+          cached in Chrome session storage for about one hour so the toolbar can
+          reuse a score without writing a trail entry.
         </li>
         <li>
-          <strong>Local Domain Rating trail.</strong> After a successful lookup,
-          the extension may store the hostname and Domain Rating (plus a previous
-          rating for delta display) in Chrome local storage on this browser only.
-          This powers the recent list and “since last visit” delta in the popup.
-          It is never uploaded or synced by this extension. Use
-          <strong>Clear</strong> in the popup to remove the trail; uninstalling
-          the extension also removes it.
+          <strong>Local Domain Rating trail.</strong> The extension stores
+          hostname and Domain Rating (plus a previous rating for delta display)
+          in Chrome local storage only after an explicit lookup: opening the
+          popup on a site, clicking <strong>Save to trail</strong>, or a
+          successful pasted-domain lookup. Badge prefetch does not write this
+          list. Upgrading from 1.2.x clears any previous trail so leftover
+          badge-prefetch history is not kept. The trail is never uploaded or
+          synced by this extension. Use
+          <strong>Clear</strong> in the popup to remove it; uninstalling the
+          extension also removes it.
         </li>
       </ol>
 
@@ -108,8 +115,8 @@
         <li>No analytics, crash reporting, or advertising identifiers</li>
         <li>No account system operated by this extension</li>
         <li>
-          No remote browsing-history logging (any recent DR trail stays on this
-          browser only)
+          No remote browsing-history logging (the Recent trail is not a log of
+          sites you visited; it stays on this browser only)
         </li>
         <li>No sale or sharing of personal information with data brokers</li>
       </ul>
@@ -128,8 +135,9 @@
           extension action
         </li>
         <li>
-          <code>tabs</code> — read tab URLs on navigation so the toolbar badge
-          can show Domain Rating for the current site
+          <code>tabs</code> — read the active tab URL on navigation so the
+          toolbar badge can show Domain Rating for the current site, and open a
+          trail domain in a new tab when you click Open
         </li>
         <li>
           <code>storage</code> — store your API key and optional local Domain

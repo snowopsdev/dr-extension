@@ -17,6 +17,21 @@
         <p class="status">Loading…</p>
       </section>
 
+      <section id="lookup" class="lookup" hidden>
+        <form id="lookup-form" class="lookup-form">
+          <label class="visually-hidden" for="lookup-input">Look up domain</label>
+          <input
+            id="lookup-input"
+            name="lookup"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Look up a domain"
+          />
+          <button type="submit" class="copy-btn">Look up</button>
+        </form>
+      </section>
+
       <section id="settings" class="panel settings" hidden>
         <p class="settings-lede">
           Paste your free Ahrefs APIv3 key. Stored only in this browser.
@@ -31,6 +46,10 @@
             spellcheck="false"
             placeholder="Paste your free Bearer token"
           />
+          <label class="show-key">
+            <input id="show-key" type="checkbox" />
+            Show key
+          </label>
           <p class="hint">
             Create a key in
             <a
@@ -39,6 +58,7 @@
               rel="noopener noreferrer"
               >Ahrefs → Account → API keys</a
             >.
+            Saving checks the key with a lookup of example.com.
           </p>
           <div class="settings-actions">
             <button type="submit" class="copy-btn">Save key</button>
@@ -51,7 +71,10 @@
       <section id="trail" class="trail" hidden>
         <div class="trail-head">
           <p class="trail-title">Recent</p>
-          <button type="button" class="linkish" id="clear-trail">Clear</button>
+          <div class="trail-actions">
+            <button type="button" class="linkish" id="copy-trail">Copy all</button>
+            <button type="button" class="linkish" id="clear-trail">Clear</button>
+          </div>
         </div>
         <ul id="trail-list" class="trail-list"></ul>
       </section>

@@ -1,25 +1,55 @@
 import assert from "node:assert/strict";
-import { formatBadgeText } from "../lib/badge.js";
+import { formatBadgeText, resolveBadgeText } from "../lib/badge.js";
 import {
+  canonicalizeHostname,
   errorMessage,
+  hostnameFromInput,
   hostnameFromUrl,
+  httpsUrlForDomain,
+  isPrefetchPauseError,
   mapHttpError,
   parseDomainRatingResponse,
 } from "../lib/domain.js";
 import {
   TRAIL_MAX_ENTRIES,
+  TRAIL_SCHEMA_EXPLICIT,
   applyObservation,
   formatCopyLine,
   formatDeltaText,
+  formatTrailTsv,
   parseTrail,
+  shouldResetLegacyTrail,
   trailDelta,
 } from "../lib/trail.js";
 
-assert.equal(hostnameFromUrl("https://www.example.com/path"), "www.example.com");
+assert.equal(hostnameFromUrl("https://www.example.com/path"), "example.com");
 assert.equal(hostnameFromUrl("http://example.com"), "example.com");
+assert.equal(hostnameFromUrl("https://blog.example.com"), "blog.example.com");
+assert.equal(hostnameFromUrl("https://www.blog.example.com/x"), "blog.example.com");
+assert.equal(hostnameFromUrl("https://www.www.example.com"), "www.example.com");
+assert.equal(hostnameFromUrl("https://api.www.example.com"), "api.www.example.com");
 assert.equal(hostnameFromUrl("chrome://extensions"), null);
 assert.equal(hostnameFromUrl("file:///tmp/x"), null);
 assert.equal(hostnameFromUrl(undefined), null);
+
+assert.equal(canonicalizeHostname("WWW.Example.COM"), "example.com");
+assert.equal(canonicalizeHostname("www."), null);
+assert.equal(canonicalizeHostname(""), null);
+
+assert.equal(hostnameFromInput("example.com"), "example.com");
+assert.equal(hostnameFromInput("www.example.com/path"), "example.com");
+assert.equal(hostnameFromInput("  https://www.example.com "), "example.com");
+assert.equal(hostnameFromInput("ftp://example.com"), null);
+assert.equal(hostnameFromInput(""), null);
+
+assert.equal(httpsUrlForDomain("www.example.com"), "https://example.com");
+assert.equal(httpsUrlForDomain("blog.example.com"), "https://blog.example.com");
+assert.equal(httpsUrlForDomain("not a host"), null);
+
+assert.equal(isPrefetchPauseError({ kind: "rate_limited" }), true);
+assert.equal(isPrefetchPauseError({ kind: "server" }), true);
+assert.equal(isPrefetchPauseError({ kind: "unauthorized" }), false);
+assert.equal(isPrefetchPauseError({ kind: "network", detail: "x" }), false);
 
 const ok = parseDomainRatingResponse({
   domain_rating: {
@@ -44,12 +74,17 @@ assert.equal(mapHttpError(500, "").kind, "server");
 
 assert.match(errorMessage({ kind: "missing_key" }), /API key/);
 assert.match(errorMessage({ kind: "unsupported_page" }), /http/);
+assert.match(errorMessage({ kind: "rate_limited" }), /rate limit/);
+assert.match(errorMessage({ kind: "server" }), /server/);
 
 assert.equal(formatBadgeText(94), "94");
 assert.equal(formatBadgeText(94.0), "94");
 assert.equal(formatBadgeText(94.5), "94.5");
 assert.equal(formatBadgeText(100), "100");
 assert.equal(formatBadgeText(Number.NaN), "");
+assert.equal(resolveBadgeText(94), "94");
+assert.equal(resolveBadgeText(null), "");
+assert.equal(resolveBadgeText(null, "!"), "!");
 
 assert.equal(formatCopyLine("example.com", 94), "example.com — DR 94");
 assert.equal(formatCopyLine("example.com", 94.5), "example.com — DR 94.5");
@@ -85,6 +120,16 @@ assert.equal(formatDeltaText(-1.5), "-1.5");
   assert.equal(trail[0].domain, "other.com");
   assert.equal(trail[1].domain, "example.com");
 
+  const apex = hostnameFromUrl("https://www.example.com");
+  const www = hostnameFromUrl("http://example.com/");
+  assert.equal(apex, "example.com");
+  assert.equal(www, "example.com");
+  let collapsed = applyObservation([], apex, 40, t0);
+  collapsed = applyObservation(collapsed, www, 41, t0 + 1);
+  assert.equal(collapsed.length, 1);
+  assert.equal(collapsed[0].domain, "example.com");
+  assert.equal(collapsed[0].rating, 41);
+
   assert.deepEqual(applyObservation(trail, "", 50, t0), trail);
   assert.deepEqual(applyObservation(trail, "x.com", Number.NaN, t0), trail);
 
@@ -115,5 +160,36 @@ assert.deepEqual(parseTrail([{ domain: "a.com", rating: "x", seenAt: 1 }]), []);
   assert.deepEqual(parsed[0].previous, { rating: 10, seenAt: 50 });
   assert.equal(parsed[1].previous, null);
 }
+
+{
+  const tsv = formatTrailTsv([
+    {
+      domain: "example.com",
+      rating: 94,
+      seenAt: Date.parse("2026-09-11T12:00:00.000Z"),
+      previous: { rating: 90, seenAt: 1 },
+    },
+    {
+      domain: "other.com",
+      rating: 10.5,
+      seenAt: Date.parse("2026-09-11T13:00:00.000Z"),
+      previous: null,
+    },
+  ]);
+  assert.equal(
+    tsv,
+    [
+      "domain\tdr\tseenAt\tpreviousDr",
+      "example.com\t94\t2026-09-11T12:00:00.000Z\t90",
+      "other.com\t10.5\t2026-09-11T13:00:00.000Z\t",
+    ].join("\n"),
+  );
+  assert.equal(formatTrailTsv([]), "domain\tdr\tseenAt\tpreviousDr");
+}
+
+assert.equal(shouldResetLegacyTrail(undefined), true);
+assert.equal(shouldResetLegacyTrail(1), true);
+assert.equal(shouldResetLegacyTrail("2"), true);
+assert.equal(shouldResetLegacyTrail(TRAIL_SCHEMA_EXPLICIT), false);
 
 console.log("test-domain: ok");

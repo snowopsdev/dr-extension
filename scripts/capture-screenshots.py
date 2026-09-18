@@ -20,12 +20,16 @@ FONT = Path("/System/Library/Fonts/Supplemental")
 
 
 class CDP:
+    """Send sequential DevTools commands while collecting page errors."""
+
     def __init__(self, ws):
+        """Bind a WebSocket and initialize command and error tracking."""
         self.ws = ws
         self.sequence = 0
         self.errors = []
 
     async def call(self, method, params=None):
+        """Await a command response, recording intervening runtime errors."""
         self.sequence += 1
         await self.ws.send(json.dumps({"id": self.sequence, "method": method, "params": params or {}}))
         while True:
@@ -40,12 +44,14 @@ class CDP:
                 return response["result"]
 
     async def evaluate(self, expression):
+        """Evaluate page JavaScript and raise on evaluation exceptions."""
         result = await self.call("Runtime.evaluate", {"expression": expression, "awaitPromise": True, "returnByValue": True})
         if "exceptionDetails" in result:
             raise RuntimeError(result["exceptionDetails"])
         return result.get("result", {}).get("value")
 
     async def until(self, expression):
+        """Poll a page condition until it succeeds or the retry limit is hit."""
         for _ in range(80):
             if await self.evaluate(expression):
                 return
@@ -54,10 +60,12 @@ class CDP:
 
 
 def font(size, bold=False):
+    """Load the macOS Arial face used for screenshot captions."""
     return ImageFont.truetype(str(FONT / ("Arial Bold.ttf" if bold else "Arial.ttf")), size)
 
 
 def compose(raw, filename, number, title, body, note):
+    """Place a complete UI capture and captions on a branded 1280×800 PNG."""
     canvas = Image.new("RGB", (1280, 800), "#191E21")
     draw = ImageDraw.Draw(canvas)
     gold, stone, muted = "#E3B444", "#E9E5DF", "#B4BABD"
@@ -82,18 +90,23 @@ def compose(raw, filename, number, title, body, note):
 
 
 async def capture(page, filename, number, title, body, note):
+    """Validate popup dimensions and errors before composing its screenshot."""
     await page.evaluate("document.fonts.ready.then(() => true)")
     height = await page.evaluate("Math.ceil(document.querySelector('.shell').getBoundingClientRect().bottom)")
-    assert 100 < height <= 800, f"Unexpected popup height: {height}"
+    if not 100 < height <= 800:
+        raise RuntimeError(f"Unexpected popup height: {height}")
     await page.call("Emulation.setDeviceMetricsOverride", {"width": 320, "height": height, "deviceScaleFactor": 2, "mobile": False})
     await page.evaluate("new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true))))")
-    assert await page.evaluate("document.documentElement.scrollWidth <= 320"), "Horizontal overflow"
+    if not await page.evaluate("document.documentElement.scrollWidth <= 320"):
+        raise RuntimeError("Horizontal overflow")
     shot = await page.call("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": False})
-    assert not page.errors, f"Popup runtime/console errors: {page.errors}"
+    if page.errors:
+        raise RuntimeError(f"Popup runtime/console errors: {page.errors}")
     compose(base64.b64decode(shot["data"]), filename, number, title, body, note)
 
 
 async def main():
+    """Capture setup, Options, and an illustrative rating in the test profile."""
     version = json.load(urllib.request.urlopen(f"http://127.0.0.1:{PORT}/json/version"))
     async with websockets.connect(version["webSocketDebuggerUrl"]) as ws:
         browser = CDP(ws)
@@ -134,7 +147,8 @@ async def main():
             await page.until("!document.querySelector('#lookup').hidden && document.querySelector('#settings').hidden")
             await page.evaluate("document.querySelector('#lookup-input').value = 'example.com'; document.querySelector('#lookup-form').requestSubmit()")
             await page.until("document.querySelector('.rating-value')?.textContent === '94' && document.querySelector('[data-open]') !== null")
-            assert await page.evaluate("!!document.querySelector('#save-to-trail') && !document.querySelector('#lookup').hidden"), "Missing current controls"
+            if not await page.evaluate("!!document.querySelector('#save-to-trail') && !document.querySelector('#lookup').hidden"):
+                raise RuntimeError("Missing current controls")
             await capture(page, "01-popup-ready-1280x800.png", 1,
                           "Look up a domain.\nKeep the context.",
                           "Copy its rating, save it to your trail,\nand revisit domains from Recent.",

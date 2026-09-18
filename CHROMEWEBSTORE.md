@@ -1,6 +1,6 @@
 # Chrome Web Store Listing — Domain Rating Lookup
 
-> Last Updated: 2026-09-11
+> Last Updated: 2026-09-18
 
 ## Store Listing
 
@@ -49,7 +49,7 @@ SUPPORT
 Questions or issues: https://github.com/snowopsdev/dr-extension/issues
 Contact: aj@snowops.dev
 
-Version 1.3.0 — Honest trail (explicit lookups only), fewer API calls, key check on save, paste-a-domain, TSV copy, www collapse.
+Version 1.3.1 — Orbit Gold icons and refreshed promotional artwork. Existing lookup, trail, and toolbar badge behavior is unchanged.
 
 **Category** [REQUIRED]
 
@@ -75,13 +75,15 @@ English
 | Screenshot 4 | 1280×800 or 640×400 | ⬜ Not created | |
 | Screenshot 5 | 1280×800 or 640×400 | ⬜ Not created | |
 | Small Promo Tile [RECOMMENDED] | 440×280 | ✅ Ready | `store/promo/small-promo-440x280.png` |
-| Marquee Promo Tile | 1400×560 | ⬜ Not created | |
+| Marquee Promo Tile | 1400×560 | ✅ Ready | `store/promo/marquee-1400x560.png` |
 
 ### Screenshot Notes
 
-1. Success popup with Domain Rating, First look / delta, Copy, and Recent trail.
-2. In-popup Options with API key field (local storage only).
+1. Rating popup with Copy, Save to trail, domain lookup, and Recent trail with Copy all / Open. The example.com score of 94 is explicitly labeled illustrative data.
+2. In-popup Options with an empty API key field (local storage only).
 3. Setup-required state with Add API key CTA.
+
+Refreshed September 18, 2026: three 1280×800 RGB PNGs with Orbit Gold branding and captures of the unmodified extension UI. `npm run screenshots` uses a disposable Chrome profile and a seeded local cache for the rating example; no real API key is used. Options and setup are actual empty-key states. The capture checks for horizontal overflow and popup console/runtime errors. The screenshot tooling requires Google Chrome, Python 3 with Pillow and websockets, and macOS Arial fonts.
 
 
 ## Permissions Justification
@@ -160,6 +162,7 @@ https://github.com/snowopsdev/dr-extension
 
 | Version | Date | Changes | Status |
 |---------|------|---------|--------|
+| 1.3.1 | 2026-09-17 | Orbit Gold icons; text-free small promo and marquee artwork; no behavior changes | Draft — not submitted |
 | 1.3.0 | 2026-09-11 | Trail writes only on explicit lookup; active-tab badge + 429 backoff; single Ahrefs client; key check on save; paste/TSV/Open; collapse www | Draft |
 | 1.2.1 | 2026-08-28 | In-popup Options (no chrome://extensions jump); remove license URL clutter; “domain rating” label | Submitted (CWS) / Released (GitHub `v1.2.1`) |
 | 1.2.0 | 2026-08-28 | DR trail, score delta, one-click copy; Graphite Amber UI; toolbar badges | Draft |
@@ -171,7 +174,10 @@ https://github.com/snowopsdev/dr-extension
 ### Pre-submit package
 
 - Zip: `dist/domain-rating-lookup.zip` (rebuild with `npm run package`)
-- Manifest version: `1.3.0`
+- Manifest version: `1.3.1`
+- Asset verification (2026-09-17): core icon and promo hashes match the supplied Orbit Gold kit; declared icon dimensions verified; 128px icon has a 96px artwork footprint with transparent 16px margins. Runtime ZIP contents checked.
+- Asset-update checks passed (2026-09-17): `npm test`, `npm run prove`, `npm run screenshots`, and `npm run package`. Screenshots were subsequently refreshed on 2026-09-18 using the actual UI renderer and labeled local example data; no DOM markup is substituted.
+- Still required before submission: inspect the actual Chrome toolbar and extension-manager icons in light/dark themes and native/high-density scaling, with no badge, one digit, two digits, and 100; check popup and Options console/runtime errors. Interactive browser inspection was unavailable during this update.
 - Reload checklist: popup Options → save key (invalid key is rejected; valid key should trigger one badge lookup, not two or three) → visit https site → badge shows rating without adding trail → open popup → site appears in Recent → paste a domain during the first fetch → pasted result wins → Copy all / Open → Clear removes trail. Upgrade from 1.2.1 clears the old trail.
 
 ### Known Issues / Limitations
@@ -183,7 +189,7 @@ https://github.com/snowopsdev/dr-extension
 
 ### Human actions still required
 
-1. Wait for Chrome Web Store review (often a few days; email goes to aj@snowops.dev).
+1. Complete the remaining browser and listing checks, then upload the package and artwork and submit for Chrome Web Store review when authorized (email goes to aj@snowops.dev).
 2. If rejected, paste the rejection notes here and we can triage fixes.
 3. After publish, share the store URL and mark this version **Published**.
 

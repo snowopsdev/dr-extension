@@ -8,6 +8,7 @@ Supporting assets:
 
 - Screenshots: `store/screenshots/`
 - Small promo tile: `store/promo/small-promo-440x280.png`
+- Marquee promo tile: `store/promo/marquee-1400x560.png`
 - Privacy (markdown): `store/PRIVACY.md`
 - Privacy (HTML for hosting): `store/privacy.html`
 - Package: `dist/domain-rating-lookup.zip` via `npm run package`

@@ -8,7 +8,7 @@ Chrome extension that shows **Ahrefs Domain Rating** for the site in your active
 
 <div align="center">
   <img src="store/promo/small-promo-440x280.png" alt="Domain Rating Lookup promo" />
-  <p><strong>v1.3.0</strong> · <a href="https://github.com/snowopsdev/dr-extension">GitHub</a> · <a href="https://chromewebstore.google.com/detail/domain-rating-lookup/bmhkggondppljacnlenomikfogbppidc">Chrome Web Store download</a></p>
+  <p><strong>v1.3.1</strong> · <a href="https://github.com/snowopsdev/dr-extension">GitHub</a> · <a href="https://chromewebstore.google.com/detail/domain-rating-lookup/bmhkggondppljacnlenomikfogbppidc">Chrome Web Store download</a></p>
 </div>
 
 ---
@@ -77,6 +77,8 @@ npm run prove                       # CDP load-unpacked smoke
 ```
 
 Store listing source of truth: [`CHROMEWEBSTORE.md`](CHROMEWEBSTORE.md)
+
+Screenshot capture requires macOS Google Chrome and Arial fonts, plus Python 3 with Pillow and websockets. It uses a disposable browser profile, captures the actual popup UI, and labels the locally seeded example rating. No real API key is required.
 
 ## License
 

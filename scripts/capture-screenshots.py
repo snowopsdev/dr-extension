@@ -135,8 +135,14 @@ async def main():
 
             # Seed data, not markup. The service worker consumes the cache and
             # records the lookup; the unmodified popup renders the result.
+            # A sentinel makes completion of the key-change cache clear observable,
+            # even when the disposable profile's cache was already empty.
+            await page.evaluate("chrome.storage.session.set({drBadgeCache: {__screenshot_invalidation_pending__: true}})")
             await page.evaluate("chrome.storage.local.set({ahrefsApiKey: 'screenshot-placeholder-not-a-real-key'})")
-            await asyncio.sleep(0.5)  # Allow key-change cache invalidation to settle.
+            await page.until("""(async () => {
+              const {drBadgeCache} = await chrome.storage.session.get('drBadgeCache');
+              return drBadgeCache != null && Object.keys(drBadgeCache).length === 0;
+            })()""")
             await page.evaluate("""(async () => {
               await chrome.runtime.sendMessage({type: 'badge.refresh'});
               await chrome.storage.session.set({drBadgeCache: {

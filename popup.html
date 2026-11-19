@@ -66,6 +66,38 @@
           </div>
           <p id="settings-status" class="settings-status" role="status"></p>
         </form>
+
+        <form id="prefs-form" class="prefs">
+          <fieldset class="choice-group">
+            <legend>Toolbar badge</legend>
+            <label class="choice">
+              <input type="radio" name="badge-mode" value="auto" />
+              Automatic: look up each site you visit
+            </label>
+            <label class="choice">
+              <input type="radio" name="badge-mode" value="click" />
+              On click: look up a site only when you open this popup
+            </label>
+          </fieldset>
+          <label for="skip-hosts">Never look up these sites</label>
+          <textarea
+            id="skip-hosts"
+            name="skip-hosts"
+            rows="2"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="wiki.mycompany.com"
+          ></textarea>
+          <p class="hint">
+            One per line; subdomains are included. Local and private hosts
+            (localhost, IP addresses, .local, .internal) are never sent to
+            Ahrefs.
+          </p>
+          <div class="settings-actions">
+            <button type="submit" class="copy-btn">Save settings</button>
+          </div>
+          <p id="prefs-status" class="settings-status" role="status"></p>
+        </form>
       </section>
 
       <section id="trail" class="trail" hidden>
@@ -82,7 +114,7 @@
       <footer class="footer">
         <p class="attribution">
           <a
-            href="http://ahrefs.com/legal/domain-rating-license"
+            href="https://ahrefs.com/"
             target="_blank"
             rel="noopener noreferrer"
             >Domain Rating by Ahrefs</a

@@ -6,7 +6,12 @@ import {
   hostnameFromUrl,
   isPrefetchPauseError,
 } from "./lib/domain.js";
-import { loadApiKey } from "./lib/storage.js";
+import { isPrivateHost, isSkippedHost } from "./lib/guard.js";
+import {
+  SETTINGS_STORAGE_KEY,
+  loadApiKey,
+  loadSettings,
+} from "./lib/storage.js";
 import { migrateTrailIfNeeded, recordObservation } from "./lib/trail.js";
 
 const CACHE_TTL_MS = 60 * 60 * 1000;
@@ -55,6 +60,9 @@ chrome.storage.onChanged.addListener((changes, area) => {
         void refreshActiveTab();
       });
     return;
+  }
+  if (area === "local" && changes[SETTINGS_STORAGE_KEY]) {
+    void refreshActiveTab();
   }
 });
 
@@ -237,12 +245,60 @@ async function applyErrorBadge(tabId, error, domain) {
 }
 
 /**
+ * Hosts that must not be sent to Ahrefs: local/private names always, plus
+ * anything on the user's skip list.
+ * @param {string} domain
+ * @param {import('./lib/guard.js').LookupSettings} settings
+ * @returns {import('./lib/domain.js').FetchError | null}
+ */
+function guardError(domain, settings) {
+  if (isPrivateHost(domain)) return { kind: "private_host" };
+  if (isSkippedHost(domain, settings.skipHosts)) return { kind: "skipped_host" };
+  return null;
+}
+
+/**
+ * "On click" badge mode: never fetch on navigation. Show a rating only if an
+ * earlier explicit lookup left one in the session cache.
+ * @param {{
+ *   domain: string,
+ *   tabId: number,
+ *   generation: number,
+ *   settings: import('./lib/guard.js').LookupSettings,
+ * }} args
+ * @returns {Promise<void>}
+ */
+async function showManualBadge({ domain, tabId, generation, settings }) {
+  const blocked = guardError(domain, settings);
+  const cache = blocked ? {} : await readCache();
+  const cached = cache[domain];
+  const fresh = cached && Date.now() - cached.at < CACHE_TTL_MS ? cached : null;
+  if ((await currentGeneration(tabId)) !== generation) return;
+  if (blocked) {
+    await applyBadge({
+      tabId,
+      rating: null,
+      title: `Domain Rating Lookup — ${errorMessage(blocked)}`,
+    });
+    return;
+  }
+  await applyBadge({
+    tabId,
+    rating: fresh ? fresh.rating : null,
+    title: fresh
+      ? `Domain Rating ${fresh.rating} · ${domain}`
+      : `Domain Rating Lookup — click to look up ${domain}`,
+  });
+}
+
+/**
  * @param {{
  *   domain: string,
  *   tabId?: number | null,
  *   recordTrail?: boolean,
  *   allowFetch: boolean,
  *   generation?: number | null,
+ *   settings?: import('./lib/guard.js').LookupSettings,
  * }} args
  * @returns {Promise<import('./lib/domain.js').FetchResult & { domain: string, cached?: boolean }>}
  */
@@ -252,7 +308,20 @@ async function lookupDomain({
   recordTrail = false,
   allowFetch,
   generation = null,
+  settings,
 }) {
+  const blocked = guardError(domain, settings ?? (await loadSettings()));
+  if (blocked) {
+    if (tabId != null && (generation == null || (await currentGeneration(tabId)) === generation)) {
+      await applyBadge({
+        tabId,
+        rating: null,
+        title: `Domain Rating Lookup — ${errorMessage(blocked)}`,
+      });
+    }
+    return { ok: false, error: blocked, domain };
+  }
+
   const key = await loadApiKey();
   if (!key) {
     if (tabId != null) {
@@ -369,6 +438,12 @@ async function refreshTab(tabId, knownUrl) {
     return;
   }
 
+  const settings = await loadSettings();
+  if (settings.badgeMode === "click") {
+    await showManualBadge({ domain, tabId, generation, settings });
+    return;
+  }
+
   const backoff = await readBackoff();
   const paused = Date.now() < backoff.until;
   await lookupDomain({
@@ -377,6 +452,7 @@ async function refreshTab(tabId, knownUrl) {
     recordTrail: false,
     allowFetch: !paused,
     generation,
+    settings,
   });
 }
 

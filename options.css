@@ -132,6 +132,66 @@ button.secondary {
   color: var(--danger);
 }
 
+.prefs {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(242, 177, 52, 0.14);
+}
+
+.choice-group {
+  margin: 0 0 14px;
+  padding: 0;
+  border: 0;
+}
+
+.choice-group legend {
+  padding: 0;
+  margin-bottom: 6px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.choice input {
+  width: auto;
+  flex-shrink: 0;
+  margin: 3px 0 0;
+  padding: 0;
+  accent-color: var(--accent);
+}
+
+textarea {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(242, 177, 52, 0.28);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+  resize: vertical;
+}
+
+textarea::placeholder {
+  color: #6b6b6b;
+}
+
 code {
   font-size: 0.85em;
   color: #d4d4d4;

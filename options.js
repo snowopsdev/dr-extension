@@ -1,5 +1,5 @@
 import { loadApiKey } from "./lib/storage.js";
-import { bindKeyForm } from "./lib/settings.js";
+import { bindKeyForm, bindLookupPrefsForm } from "./lib/settings.js";
 
 const form = document.getElementById("form");
 const input = document.getElementById("api-key");
@@ -20,4 +20,11 @@ bindKeyForm({
   showKeyToggle: showKeyToggle instanceof HTMLInputElement ? showKeyToggle : null,
 });
 
+const prefs = bindLookupPrefsForm({
+  form: document.getElementById("prefs-form"),
+  skipInput: document.getElementById("skip-hosts"),
+  statusEl: document.getElementById("prefs-status"),
+});
+
 hydrate();
+void prefs.hydrate();

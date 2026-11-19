@@ -62,7 +62,7 @@
   <body>
     <main>
       <h1>Privacy Policy — Domain Rating Lookup</h1>
-      <p class="meta">Last updated: 2026-09-11</p>
+      <p class="meta">Last updated: 2026-11-19</p>
 
       <h2>Summary</h2>
       <p>
@@ -77,7 +77,13 @@
           <strong>Active tab hostname.</strong> The extension reads the URL of
           the active tab to extract the hostname for Domain Rating lookups and
           to show the score on the toolbar badge. It does not read page content.
-          Badge lookups are limited to the active tab.
+          Badge lookups are limited to the active tab. Local and private hosts
+          (<code>localhost</code>, IP addresses, single-label names, and
+          reserved suffixes such as <code>.local</code>,
+          <code>.internal</code>, and <code>.test</code>) are never sent to
+          Ahrefs, and neither is any site on your skip list. If you set the
+          badge to <strong>On click</strong> in Options, no hostname is sent
+          until you open the popup or look up a domain yourself.
         </li>
         <li>
           <strong>Ahrefs API key.</strong> If you paste a free Ahrefs APIv3 key
@@ -91,7 +97,8 @@
         <li>
           <strong>API response fields.</strong> The extension shows Domain
           Rating from Ahrefs (including as badge text). Attribution appears in
-          the popup footer. Responses are not uploaded to any third party other
+          the popup footer and is included in copied ratings and the TSV
+          export. Responses are not uploaded to any third party other
           than Ahrefs as part of that request. Successful badge lookups may be
           cached in Chrome session storage for about one hour so the toolbar can
           reuse a score without writing a trail entry.
@@ -107,6 +114,12 @@
           synced by this extension. Use
           <strong>Clear</strong> in the popup to remove it; uninstalling the
           extension also removes it.
+        </li>
+        <li>
+          <strong>Lookup settings.</strong> Your badge mode (Automatic or On
+          click) and your skip list of hostnames are stored in Chrome local
+          storage on this browser only. They are never uploaded or synced by
+          this extension.
         </li>
       </ol>
 
@@ -140,8 +153,8 @@
           trail domain in a new tab when you click Open
         </li>
         <li>
-          <code>storage</code> — store your API key and optional local Domain
-          Rating trail on this browser
+          <code>storage</code> — store your API key, lookup settings, and
+          optional local Domain Rating trail on this browser
         </li>
         <li>
           Host access to <code>https://api.ahrefs.com/*</code> — perform Domain
@@ -152,7 +165,9 @@
       <h2>Your controls</h2>
       <p>
         Open <strong>Options</strong> inside the extension popup to change or
-        clear your API key. In the popup, use <strong>Clear</strong> on the
+        clear your API key, to switch the toolbar badge between
+        <strong>Automatic</strong> and <strong>On click</strong>, and to list
+        sites that must never be looked up. In the popup, use <strong>Clear</strong> on the
         recent list to delete the local Domain Rating trail. Removing the
         extension deletes its locally stored data.
       </p>

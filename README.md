@@ -77,6 +77,7 @@ AHREFS_API_KEY=… npm run smoke      # live success path
 npm run screenshots                 # regenerate store/screenshots
 npm run package                     # writes dist/domain-rating-lookup.zip
 npm run prove                       # CDP load-unpacked smoke
+npm run verify                      # headless end-to-end: private and skipped hosts never reach Ahrefs
 ```
 
 Store listing source of truth: [`CHROMEWEBSTORE.md`](CHROMEWEBSTORE.md)

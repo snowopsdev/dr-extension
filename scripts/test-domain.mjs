@@ -11,6 +11,14 @@ import {
   parseDomainRatingResponse,
 } from "../lib/domain.js";
 import {
+  DEFAULT_SETTINGS,
+  SKIP_LIST_MAX_ENTRIES,
+  isPrivateHost,
+  isSkippedHost,
+  parseSettings,
+  parseSkipList,
+} from "../lib/guard.js";
+import {
   TRAIL_MAX_ENTRIES,
   TRAIL_SCHEMA_EXPLICIT,
   applyObservation,
@@ -34,6 +42,10 @@ assert.equal(hostnameFromUrl(undefined), null);
 
 assert.equal(canonicalizeHostname("WWW.Example.COM"), "example.com");
 assert.equal(canonicalizeHostname("www."), null);
+assert.equal(canonicalizeHostname("Example.com."), "example.com");
+assert.equal(canonicalizeHostname("www.example.com.."), "example.com");
+assert.equal(canonicalizeHostname("."), null);
+assert.equal(hostnameFromUrl("https://example.com./path"), "example.com");
 assert.equal(canonicalizeHostname(""), null);
 
 assert.equal(hostnameFromInput("example.com"), "example.com");
@@ -76,6 +88,91 @@ assert.match(errorMessage({ kind: "missing_key" }), /API key/);
 assert.match(errorMessage({ kind: "unsupported_page" }), /http/);
 assert.match(errorMessage({ kind: "rate_limited" }), /rate limit/);
 assert.match(errorMessage({ kind: "server" }), /server/);
+assert.match(errorMessage({ kind: "private_host" }), /never sent to Ahrefs/);
+assert.match(errorMessage({ kind: "skipped_host" }), /skip list/);
+
+for (const host of [
+  "localhost",
+  "app.localhost",
+  "intranet",
+  "printer.local",
+  "build.internal",
+  "wiki.intranet",
+  "site.test",
+  "x.invalid",
+  "demo.example",
+  "nas.lan",
+  "router.home",
+  "git.corp",
+  "router.home.arpa",
+  "abcdef.onion",
+  "127.0.0.1",
+  "192.168.1.10",
+  "8.8.8.8",
+  "[::1]",
+  "[2001:db8::1]",
+  "localhost.",
+  "",
+  null,
+  undefined,
+]) {
+  assert.equal(isPrivateHost(host), true, `private: ${host}`);
+}
+for (const host of [
+  "example.com",
+  "blog.example.com",
+  "local.example.com",
+  "internal.example.org",
+  "test.dev",
+  "1.example.com",
+]) {
+  assert.equal(isPrivateHost(host), false, `public: ${host}`);
+}
+// Every way a tab URL or pasted value can name a local host is caught.
+for (const input of [
+  "http://localhost:3000/admin",
+  "http://127.0.0.1:8080",
+  "http://[::1]:5173/",
+  "http://0x7f.1/",
+  "http://2130706433/",
+  "https://intranet/wiki",
+  "https://build.internal./",
+  "LOCALHOST",
+  "192.168.0.1/login",
+]) {
+  assert.equal(isPrivateHost(hostnameFromInput(input)), true, `private input: ${input}`);
+}
+
+assert.deepEqual(parseSkipList(""), []);
+assert.deepEqual(parseSkipList(null), []);
+assert.deepEqual(
+  parseSkipList("Wiki.MyCompany.com\nhttps://www.example.org/path, *.staging.example.net\n\nwiki.mycompany.com  not a host!"),
+  ["wiki.mycompany.com", "example.org", "staging.example.net"],
+);
+{
+  const many = Array.from({ length: SKIP_LIST_MAX_ENTRIES + 20 }, (_, i) => `h${i}.com`);
+  assert.equal(parseSkipList(many.join("\n")).length, SKIP_LIST_MAX_ENTRIES);
+}
+
+assert.equal(isSkippedHost("example.org", ["example.org"]), true);
+assert.equal(isSkippedHost("deep.sub.example.org", ["example.org"]), true);
+assert.equal(isSkippedHost("notexample.org", ["example.org"]), false);
+assert.equal(isSkippedHost("example.org", ["sub.example.org"]), false);
+assert.equal(isSkippedHost("example.org", []), false);
+assert.equal(isSkippedHost(null, ["example.org"]), false);
+
+assert.deepEqual(parseSettings(undefined), { badgeMode: "auto", skipHosts: [] });
+assert.deepEqual(parseSettings("nope"), { badgeMode: "auto", skipHosts: [] });
+assert.deepEqual(parseSettings({ badgeMode: "bogus", skipHosts: "x" }), {
+  badgeMode: "auto",
+  skipHosts: [],
+});
+assert.deepEqual(
+  parseSettings({ badgeMode: "click", skipHosts: ["WWW.Example.org", 7, "example.org", ""] }),
+  { badgeMode: "click", skipHosts: ["example.org"] },
+);
+assert.equal(DEFAULT_SETTINGS.badgeMode, "auto");
+assert.deepEqual(parseSettings(DEFAULT_SETTINGS), { badgeMode: "auto", skipHosts: [] });
 
 assert.equal(formatBadgeText(94), "94");
 assert.equal(formatBadgeText(94.0), "94");
@@ -86,8 +183,14 @@ assert.equal(resolveBadgeText(94), "94");
 assert.equal(resolveBadgeText(null), "");
 assert.equal(resolveBadgeText(null, "!"), "!");
 
-assert.equal(formatCopyLine("example.com", 94), "example.com — DR 94");
-assert.equal(formatCopyLine("example.com", 94.5), "example.com — DR 94.5");
+assert.equal(
+  formatCopyLine("example.com", 94),
+  "example.com — DR 94 · Domain Rating by Ahrefs (https://ahrefs.com/)",
+);
+assert.equal(
+  formatCopyLine("example.com", 94.5),
+  "example.com — DR 94.5 · Domain Rating by Ahrefs (https://ahrefs.com/)",
+);
 
 assert.equal(formatDeltaText(0), "±0");
 assert.equal(formatDeltaText(2), "+2");
@@ -182,9 +285,13 @@ assert.deepEqual(parseTrail([{ domain: "a.com", rating: "x", seenAt: 1 }]), []);
       "domain\tdr\tseenAt\tpreviousDr",
       "example.com\t94\t2026-09-11T12:00:00.000Z\t90",
       "other.com\t10.5\t2026-09-11T13:00:00.000Z\t",
+      "Domain Rating by Ahrefs\thttps://ahrefs.com/",
     ].join("\n"),
   );
-  assert.equal(formatTrailTsv([]), "domain\tdr\tseenAt\tpreviousDr");
+  assert.equal(
+    formatTrailTsv([]),
+    "domain\tdr\tseenAt\tpreviousDr\nDomain Rating by Ahrefs\thttps://ahrefs.com/",
+  );
 }
 
 assert.equal(shouldResetLegacyTrail(undefined), true);

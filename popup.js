@@ -5,7 +5,7 @@ import {
   httpsUrlForDomain,
 } from "./lib/domain.js";
 import { loadApiKey } from "./lib/storage.js";
-import { bindKeyForm } from "./lib/settings.js";
+import { bindKeyForm, bindLookupPrefsForm } from "./lib/settings.js";
 import {
   TRAIL_UI_LIMIT,
   clearTrail,
@@ -52,6 +52,12 @@ bindKeyForm({
   statusEl: settingsStatus,
   showKeyToggle: showKeyToggle instanceof HTMLInputElement ? showKeyToggle : null,
   onSaved: () => showMain(),
+});
+
+const lookupPrefs = bindLookupPrefsForm({
+  form: document.getElementById("prefs-form"),
+  skipInput: document.getElementById("skip-hosts"),
+  statusEl: document.getElementById("prefs-status"),
 });
 
 optionsToggle.addEventListener("click", async () => {
@@ -118,6 +124,7 @@ async function showSettings() {
   settingsEl.hidden = false;
   domainEl.textContent = "Options";
   apiKeyInput.value = await loadApiKey();
+  await lookupPrefs.hydrate();
   settingsStatus.textContent = "";
   settingsStatus.classList.remove("is-error");
   apiKeyInput.focus();

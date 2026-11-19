@@ -8,7 +8,7 @@ Chrome extension that shows **Ahrefs Domain Rating** for the site in your active
 
 <div align="center">
   <img src="store/promo/small-promo-440x280.png" alt="Domain Rating Lookup promo" />
-  <p><strong>v1.3.1</strong> · <a href="https://github.com/snowopsdev/dr-extension">GitHub</a> · <a href="https://chromewebstore.google.com/detail/domain-rating-lookup/bmhkggondppljacnlenomikfogbppidc">Chrome Web Store download</a></p>
+  <p><strong>v1.4.0</strong> · <a href="https://github.com/snowopsdev/dr-extension">GitHub</a> · <a href="https://chromewebstore.google.com/detail/domain-rating-lookup/bmhkggondppljacnlenomikfogbppidc">Chrome Web Store download</a></p>
 </div>
 
 ---
@@ -22,11 +22,14 @@ Chrome extension that shows **Ahrefs Domain Rating** for the site in your active
 ## Features
 
 - **Toolbar badge** — Domain Rating for the current http(s) site (active tab only)
-- **Popup** — large rating, score delta since last saved look, one-click copy (`example.com — DR 94`)
+- **Popup** — large rating, score delta since last saved look, one-click copy (`example.com — DR 94 · Domain Rating by Ahrefs (https://ahrefs.com/)`)
 - **Look up a domain** — paste a hostname without visiting it
 - **Recent trail** — local list of domains you explicitly looked up (popup, Save to trail, or paste), with Copy all (TSV) and Open
 - **In-popup Options** — paste your free Ahrefs APIv3 key; Save checks the key before storing it
-- **Privacy-minded** — no analytics; key and trail stay local; lookups go only to Ahrefs; browsing does not fill the trail
+- **Badge mode** — Automatic (look up each site you visit) or On click (nothing is looked up until you open the popup)
+- **Skip list** — sites you never want looked up, subdomains included
+- **Local hosts stay local** — `localhost`, IP addresses, single-label intranet names, and `.local` / `.internal` style hosts are never sent to Ahrefs
+- **Privacy-minded** — no analytics; key, settings, and trail stay local; lookups go only to Ahrefs; browsing does not fill the trail
 
 ## Install
 
@@ -50,7 +53,7 @@ Chrome extension that shows **Ahrefs Domain Rating** for the site in your active
 2. Read Domain Rating on the toolbar badge
 3. Click the icon for details, copy, Save to trail, and your recent list
 4. Paste a domain in the popup to look it up without opening the site
-5. Open **Options** inside the popup anytime to change or clear your key
+5. Open **Options** inside the popup anytime to change or clear your key, switch the badge to **On click**, or edit the skip list
 
 The toolbar may cache a score for about an hour so the badge can update as you switch tabs. That cache is not the Recent trail. The trail only grows when you open the popup on a site, click **Save to trail**, or look up a pasted domain.
 
@@ -59,11 +62,11 @@ The toolbar may cache a score for about an hour so the badge can update as you s
 See [`store/PRIVACY.md`](store/PRIVACY.md) or the hosted policy:  
 https://gist.github.com/snowopsdev/8ce34b2d81c64daa4bb0d1f331650297
 
-Your API key and Domain Rating trail are stored in Chrome local storage on this browser only. Hostnames are sent to Ahrefs only when looking up Domain Rating (active-tab badge, popup, pasted domain, or a one-time example.com check when you save a key). The Recent trail is not a browsing log.
+Your API key, lookup settings, and Domain Rating trail are stored in Chrome local storage on this browser only. Hostnames are sent to Ahrefs only when looking up Domain Rating (active-tab badge, popup, pasted domain, or a one-time example.com check when you save a key). With the badge set to **On click**, no hostname is sent until you open the popup. Local and private hosts and anything on your skip list are never sent. The Recent trail is not a browsing log.
 
 ## Attribution
 
-Domain Rating by [Ahrefs](http://ahrefs.com/legal/domain-rating-license). Use is subject to the Domain Rating License.
+[Domain Rating by Ahrefs](https://ahrefs.com/). Use is subject to the [Domain Rating License](http://ahrefs.com/legal/domain-rating-license). Copied ratings and the TSV export carry the same credit.
 
 ## Develop
 
@@ -74,6 +77,7 @@ AHREFS_API_KEY=… npm run smoke      # live success path
 npm run screenshots                 # regenerate store/screenshots
 npm run package                     # writes dist/domain-rating-lookup.zip
 npm run prove                       # CDP load-unpacked smoke
+npm run verify                      # headless end-to-end: private and skipped hosts never reach Ahrefs
 ```
 
 Store listing source of truth: [`CHROMEWEBSTORE.md`](CHROMEWEBSTORE.md)
